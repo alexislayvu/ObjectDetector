@@ -25,3 +25,4 @@ An object detection project implemented in Python, leveraging the powerful capab
    - `python -m pip install --upgrade pip`
    - `pip install ipykernel`
    - `python -m ipykernel install --user --name=tfod`
+   - `pip install notebook`
