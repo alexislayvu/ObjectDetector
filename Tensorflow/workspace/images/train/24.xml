@@ -1,0 +1,26 @@
+<annotation>
+	<folder>Stop Sign Dataset</folder>
+	<filename>24.jpg</filename>
+	<path>/Users/alexis/Desktop/stop-sign-dataset/Stop Sign Dataset/24.jpg</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>600</width>
+		<height>449</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>StopSign</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>519</xmin>
+			<ymin>127</ymin>
+			<xmax>553</xmax>
+			<ymax>161</ymax>
+		</bndbox>
+	</object>
+</annotation>
