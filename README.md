@@ -28,3 +28,4 @@ An object detection project implemented in Python, leveraging the powerful capab
 
 ## Changelog
 * [841d4fd](https://github.com/alexislayvu/ObjectDetector/commit/841d4fd610b928c902fa84fc038e863462745558) update model to detect stop signs
+* [009a155](https://github.com/alexislayvu/ObjectDetector/commit/009a1551e2850f38c789d582dce88fb98960378c) rename files for consistency
