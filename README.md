@@ -1,5 +1,4 @@
 # Object Detector
-
 An object detection project implemented in Python, leveraging the powerful capabilities of the TensorFlow Object Detection API. Designed to detect objects within images and live video streams from webcams.
 
 ## Usage
@@ -26,3 +25,7 @@ An object detection project implemented in Python, leveraging the powerful capab
    - `pip install ipykernel`
    - `python -m ipykernel install --user --name=tfod`
    - `pip install notebook`
+
+## Changelog
+* [841d4fd](https://github.com/alexislayvu/ObjectDetector/commit/841d4fd610b928c902fa84fc038e863462745558) update model to detect stop signs
+* [009a155](https://github.com/alexislayvu/ObjectDetector/commit/009a1551e2850f38c789d582dce88fb98960378c) rename files for consistency
