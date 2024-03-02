@@ -85,8 +85,9 @@ function App() {
       );
     }
 
-    // trigger file input click when "Choose an image file..." is selected
+    // reset file input value when switching to image input source
     if (newInputSource === "file") {
+      fileInputRef.current.value = null; // reset file input value
       fileInputRef.current.click();
     }
 
