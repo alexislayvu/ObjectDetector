@@ -1,0 +1,26 @@
+<annotation>
+	<folder>banana</folder>
+	<filename>g_banana_00055.jpg</filename>
+	<path>/Users/cristy/Desktop/ObjectDetector/Tensorflow/workspace/images/collectedimages/banana/g_banana_00055.jpg</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>473</width>
+		<height>355</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>Banana</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>34</xmin>
+			<ymin>17</ymin>
+			<xmax>433</xmax>
+			<ymax>327</ymax>
+		</bndbox>
+	</object>
+</annotation>
