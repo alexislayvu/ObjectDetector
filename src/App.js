@@ -161,7 +161,7 @@ function App() {
     zIndex: 1,
     width: 640,
     height: 480,
-    transform: inputSource === "webcam" ? "scaleX(-1)" : "none", // Mirror webcam feed horizontally
+    transform: inputSource === "webcam" ? "scaleX(-1)" : "none", // mirror webcam feed horizontally
   };
 
   const boundingBoxStyle = {
