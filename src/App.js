@@ -24,12 +24,12 @@ function App() {
 
     // continuously detect objects in the video stream
     setInterval(() => {
-      detect(net); // call the detect function repeatedly
+      detectWebcam(net); // call the detect function repeatedly
     }, 10);
   };
 
-  // function to detect objets in the video stream
-  const detect = async (net) => {
+  // function to detect objects in the video stream
+  const detectWebcam = async (net) => {
     // check if webcam video data is available
     if (
       webcamRef.current &&
@@ -112,9 +112,9 @@ function App() {
   };
 
   // function to detect objects in an image file
-  const detectImage = async (net, imageUrl) => {
+  const detectImage = async (net, imageFile) => {
     const img = document.createElement("img");
-    img.src = imageUrl;
+    img.src = imageFile;
     img.onload = async () => {
       const ctx = boundingBoxRef.current.getContext("2d");
 
