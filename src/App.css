@@ -13,18 +13,6 @@
   }
 }
 
-body{
-  width: 100%;
-  min-height: 100vh;
-  position: static;
-  
-  display: flex;
-  justify-content: center;
-  align-items: top;
-  background: #CCCCFF;
-  font-family: "Arial";
-
-}
 
 .App-header {
   background-color: #CCCCFF;
@@ -49,6 +37,19 @@ body{
     transform: rotate(360deg);
   }
 }
+ 
+body{
+  width: 100%;
+  min-height: 100vh;
+  position: static;
+  
+  display: flex;
+  justify-content: center;
+  align-items: top;
+  background: #CCCCFF;
+  font-family: "Arial";
+
+}
 
 *{
 
@@ -64,7 +65,7 @@ body{
   text-align: center;
   margin-top: 50px; /* Adjust margin as needed */
 
-}
+ }
 
 .range-label{
   display: inline;
