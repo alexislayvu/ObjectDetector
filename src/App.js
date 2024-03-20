@@ -5,6 +5,7 @@ import Webcam from "react-webcam";
 import "./App.css";
 import { drawRect } from "./utilities";
 
+
 // initialize TensorFlow.js backend
 await tf.ready();
 
@@ -28,6 +29,7 @@ function App() {
       detectWebcam(net); // call the detect function repeatedly
     }, 10);
   };
+
 
   // function to detect objects in the video stream
   const detectWebcam = async (net) => {
@@ -206,7 +208,7 @@ function App() {
     position: "absolute",
     top: 10,
     left: 10,
-    zIndex: 3,
+    zIndex: 10,
   };
 
   return (
