@@ -2,13 +2,7 @@
 const colorMap = {};
 
 // function to draw bounding boxes and labels for detected objects
-export const drawRect = (
-  detections,
-  ctx,
-  videoWidth,
-  videoHeight,
-  isMirrored
-) => {
+export const drawRect = (detections, ctx, videoWidth, isMirrored) => {
   // loop through each detected object
   detections.forEach((prediction) => {
     // extract bounding box coordinates, class, and confidence score
