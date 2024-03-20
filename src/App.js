@@ -204,9 +204,12 @@ function App() {
 
   const dropdownStyle = {
     position: "absolute",
+    marginLeft: "auto",
+    marginRight: "auto",
     top: 10,
     left: 10,
     zIndex: 3,
+    width: 200,
   };
 
   return (
@@ -214,6 +217,7 @@ function App() {
       <header className="App-header">
         {/* dropdown menu for selecting input source */}
         <select
+          className="form-select form-select-sm"
           value={inputSource === "file" ? selectedImage : inputSource}
           onChange={handleSourceChange}
           style={dropdownStyle}
