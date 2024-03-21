@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+
+     <!--
+      This is the font for the range slider font
+    -->
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Madimi+One&display=swap" rel="stylesheet">
+
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -28,9 +37,15 @@
   </head>
   <body>
 
+   
     <div class ="field-group">
-      <label for ="range" class="range-label"> Accuracy </label>
+      <label for ="range" class="range-label"> Score threshold </label>
       <input type="range" name="range" id="range" class="range-field" value="0" min="0" max="1000">
+    
+    </div>
+     <div class ="field-group2">
+      <label for ="range2" class="range-label2"> Max Detections </label>
+      <input type="range" name="range" id="range" class="slider-thing" value="0" min="0" max="1000">
     
     </div>
 
