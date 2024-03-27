@@ -16,7 +16,7 @@
 
 
 .App-header {
-  background-color: #3a093080;
+  background-color: #cb161680;
   min-height: 0vh;
   display: flex;
   flex-direction: center;
@@ -24,7 +24,9 @@
   justify-content: center;
   font-size: calc(10px + 2vmin);
   color: rgba(64, 12, 72, 0.755);
+  
 }
+
 
 .App-link {
   color: #61dafb;
@@ -39,11 +41,11 @@
   }
 }
 
-body{
+/*body{
   width: 100%;
-  min-height: 10%;
+  min-height: 100%;
   position: center;
-  display: inline-block;
+  display: block;
   justify-content: center;
   align-items: bottom;
   background: linear-gradient(
@@ -56,7 +58,8 @@ body{
   font-style: normal;
   text-shadow: 1px 1px 2px gray, 0 0 1em rgb(195, 195, 226), 0 0 0.2em rgb(165, 165, 216);
 
-}
+} */
+
 /*
 *{
 
@@ -66,76 +69,138 @@ body{
 
 }*/
 
-.field-group{
-  text-align: top;
-  margin-top:-200px; /* Adjust margin as needed */
-  margin-left: -25%;
-}  
+.fieldgroup{
+  text-align: left;
+  margin-top:100px; 
+  margin-left: 300px;
  
- .field-group2{
-  text-align: 30px;
-  margin-top:5%; /* Adjust margin as needed */
-  margin-left: -25%;
+  position: absolute;
+  z-index: 1;
+  
 }  
 
-.range-label{
-  display: block;
+.fieldgroup2{ /* this will adjust the position of the entire range max detection */
+  text-align: left;
+  margin-top:250px; 
+  margin-left: 300px;
+ 
+  position: absolute;
+  z-index: 1;
+}  
+
+.rangelabel{ /* Adjusts slider text*/
+  display: flex;
   font-size: 1.5em;
-  color: #390970;
+  color: #ff2bbf;
   margin-bottom: 20px;
+  font-family: "Madimi One", sans-serif;
+  text-shadow: 1px 1px 2px rgb(83, 8, 58), 0 0 1em rgb(244, 48, 195), 0 0 0.2em rgb(165, 165, 216);
+ 
+} 
+.rangelabel2{ /* Adjusts slider text*/
+  display: flex;
+  font-size: 1.5em;
+  color: #ff2bbf;
+  margin-bottom: 20px;
+  font-family: "Madimi One", sans-serif;
+  text-shadow: 1px 1px 2px rgb(83, 8, 58), 0 0 1em rgb(244, 48, 195), 0 0 0.2em rgb(165, 165, 216);
  
 } 
 
-.range-label2{
-  display: block;
-  font-size: 1.5em;
-  color: #390970;
-  margin-bottom: 20px;
-  
-}
-
-.range-field{
+.rangefield{ /* Adjusts slider appearance*/
   -webkit-appearance: none;
+  appearance: none;
   outline: none;
-  width: 200px;
+  width: 300px;
   height: 10px;
-  background: #b5add9;
+  background: linear-gradient(90deg, rgb(214,214,214) 60%, rgb(214,214,214) 60%);
   border-radius: 20px;
   box-shadow: inset 0 0 5px rgba(0,0,0,1);
   overflow: hidden;
-  
+  -webkit-transition: 0.2s;
+  transition: opacity 0.2s;
+
 } 
 
- .slider-thing {
+.rangefield2 {
   -webkit-appearance: none;
+  appearance: none;
   outline: none;
-  width: 200px;
+  width: 300px;
   height: 10px;
-  background: #b5add9;
+  background: linear-gradient(90deg, rgb(214,214,214) 60%, rgb(214,214,214) 60%);
   border-radius: 20px;
   box-shadow: inset 0 0 5px rgba(0,0,0,1);
   overflow: hidden;
+  -webkit-transition: 0.2s;
+  transition: opacity 0.2s;
+} 
+
+ 
+.rangefield::-webkit-slider-thumb{ /*slider knob for score threshold*/
+  -webkit-appearance: none;
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 10px;
+  background: #d4103ead;
+  box-shadow: -410px 0 0 400px #85d782;
+  cursor: pointer;
+}
+
+.rangefield2::-webkit-slider-thumb{ /*slider knob for score threshold*/
+  -webkit-appearance: none;
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 10px;
+  background: #d4103ead;
+  box-shadow: -410px 0 0 400px #85d782; /* this is the color that appears when you slide*/
+  cursor: pointer;
+}  
+
+ p { /* this is the value text for both sliders*/
+  margin-top: 30px;
+  color: rgb(0, 0, 0);
+ }
+
+.rangefield::after {
+  content: '100';
+  color: rgb(6, 159, 50);
+  font-size: 1rem;
+  position: absolute;
+  left: 280px;
+  top: 80px;
+
+}
+.rangefield::before {
+  content: '0';
+  color: rgb(229, 0, 0);
+  font-size: 1rem;
+  position: absolute;
+  left: 5px;
+  top: 80px;
+} 
+
+.rangefield2::after {
+  content: '10';
+  color: rgb(6, 159, 50);
+  font-size: 1rem;
+  position: absolute;
+  left: 280px;
+  top: 80px;
+
+}
+.rangefield2::before {
+  content: '0';
+  color: rgb(229, 0, 0);
+  font-size: 1rem;
+  position: absolute;
+  left: 5px;
+  top: 80px;
 } 
 
 
-.slider-thing::-webkit-slider-thumb{
-  -webkit-appearance: none;
-  width: 10px;
-  height: 10px;
-  border-radius: 10px;
-  background: #37323fad;
-  box-shadow: -410px 0 0 400px #826eb3;
-  cursor: pointer;
-}  
- 
-.range-field::-webkit-slider-thumb{
-  -webkit-appearance: none;
-  width: 10px;
-  height: 10px;
-  border-radius: 10px;
-  background: #37323fad;
-  box-shadow: -410px 0 0 400px #826eb3;
-  cursor: pointer;
-}
- 
- 
+
+
+

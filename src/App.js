@@ -1,12 +1,9 @@
-// export default App;
-
 import React, { useRef, useState, useEffect } from "react";
 import * as tf from "@tensorflow/tfjs";
 import * as cocossd from "@tensorflow-models/coco-ssd";
 import Webcam from "react-webcam";
 import "./App.css";
 import { drawRect } from "./utilities";
-
 
 // initialize TensorFlow.js backend
 await tf.ready();
@@ -31,7 +28,6 @@ function App() {
       detectWebcam(net); // call the detect function repeatedly
     }, 10);
   };
-
 
   // function to detect objects in the video stream
   const detectWebcam = async (net) => {
@@ -74,21 +70,13 @@ function App() {
     runCoco();
   }, []);
 
+  // state to store the URL of the selected image file
+  const [imageUrl, setImageUrl] = useState(null);
+
   // event handler for changing input source (webcam or file)
   const handleSourceChange = async (event) => {
     const newInputSource = event.target.value;
     setInputSource(newInputSource);
-
-    // clear bounding box canvas when switching input source
-    if (newInputSource !== "webcam" && boundingBoxRef.current) {
-      const ctx = boundingBoxRef.current.getContext("2d");
-      ctx.clearRect(
-        0,
-        0,
-        boundingBoxRef.current.width,
-        boundingBoxRef.current.height
-      );
-    }
 
     // reset file input value when switching to image input source
     if (newInputSource === "file") {
@@ -96,21 +84,8 @@ function App() {
       fileInputRef.current.click();
     }
 
-    // reset webcam transformation
-    if (
-      newInputSource === "webcam" &&
-      webcamRef.current &&
-      webcamRef.current.video
-    ) {
-      webcamRef.current.video.style.transform = "none";
-    }
-
-    // if switching back to image file, perform detections again
-    if (
-      newInputSource !== "webcam" &&
-      selectedImage &&
-      selectedImage instanceof File
-    ) {
+    // if switching back to image file and an image was previously selected, display it
+    if (newInputSource !== "webcam" && imageUrl) {
       const img = new Image();
       img.onload = async () => {
         const ctx = boundingBoxRef.current.getContext("2d");
@@ -140,13 +115,13 @@ function App() {
         // draw the image on the canvas
         ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
 
-        // load COCO-SSD model and perform detections
+        // if switching back to image file, perform detections again
         const net = await cocossd.load();
         const obj = await net.detect(boundingBoxRef.current);
         drawRect(obj, ctx); // draw detections on the canvas
       };
 
-      img.src = URL.createObjectURL(selectedImage);
+      img.src = imageUrl;
     }
   };
 
@@ -155,7 +130,8 @@ function App() {
     const file = event.target.files[0];
     if (file) {
       const imageUrl = URL.createObjectURL(file);
-      setSelectedImage(file.name); // Update selected image state
+      setImageUrl(imageUrl); // store the URL of the selected image
+      setSelectedImage(file.name); // update selected image state
       const net = await cocossd.load();
       detectImage(net, imageUrl);
     }
@@ -204,35 +180,37 @@ function App() {
     display: inputSource === "webcam" ? "block" : "none",
     position: "absolute",
     marginLeft: "auto",
-    marginRight: '10%',
-    marginBottom: "10%",
-    left: 500,
+    marginRight: "auto",
+    left: 550,
     right: 0,
+    top: 50,
     textAlign: "center",
     zIndex: 1,
     width: 640,
     height: 480,
-    transform: inputSource === "webcam" ? "scaleX(-1)" : "none", // mirror webcam feed horizontally
+    transform: inputSource === "webcam" ? "  scaleX(-1)" : "none",
   };
 
   const boundingBoxStyle = {
     position: "absolute",
     marginLeft: "auto",
-    marginRight: "10%",
-    marginBottom: "10%",
-    left: 500,
+    marginRight: "auto",
+    left: 550,
     right: 0,
+    top: 50,
     textAlign: "center",
     zIndex: 2,
     width: 640,
     height: 480,
   };
-
   const dropdownStyle = {
     position: "absolute",
+    marginLeft: "auto",
+    marginRight: "auto",
     top: 10,
     left: 10,
-    zIndex: 10,
+    zIndex: 3,
+    width: 200,
   };
 
   return (
@@ -240,6 +218,7 @@ function App() {
       <header className="App-header">
         {/* dropdown menu for selecting input source */}
         <select
+          className="form-select form-select-sm"
           value={inputSource === "file" ? selectedImage : inputSource}
           onChange={handleSourceChange}
           style={dropdownStyle}
