@@ -27,12 +27,12 @@ function App() {
 
     // continuously detect objects in the video stream
     setInterval(() => {
-      detectWebcam(net); // call the detect function repeatedly
+      detectWebcam(net, accuracyThreshold); // call the detect function repeatedly
     }, 10);
   };
 
 // function to detect objects in the video stream
-const detectWebcam = async (net) => {
+const detectWebcam = async (net, accuracyThreshold) => {
   // check if webcam video data is available
   if (
     webcamRef.current &&
@@ -183,7 +183,7 @@ const detectWebcam = async (net) => {
     const sliderValue = parseFloat(event.target.value); 
     console.log("Slider value:", sliderValue); // Log the slider value to the console
     setAccuracyThreshold(sliderValue); // Set the accuracy threshold state
-  };
+  }; 
 
   // styles
   const webcamStyle = {
