@@ -175,52 +175,15 @@ function App() {
     };
   };
 
-  // styles
-  const webcamStyle = {
-    display: inputSource === "webcam" ? "block" : "none",
-    position: "absolute",
-    marginLeft: "auto",
-    marginRight: "auto",
-    left: 550,
-    right: 0,
-    textAlign: "center",
-    zIndex: 1,
-    width: 640,
-    height: 480,
-    transform: inputSource === "webcam" ? "scaleX(-1)" : "none", // mirror webcam feed horizontally
-  };
-
-  const boundingBoxStyle = {
-    position: "absolute",
-    marginLeft: "auto",
-    marginRight: "auto",
-    left: 550,
-    right: 0,
-    textAlign: "center",
-    zIndex: 2,
-    width: 640,
-    height: 480,
-  };
-
-  const dropdownStyle = {
-    position: "absolute",
-    marginLeft: "auto",
-    marginRight: "auto",
-    top: 10,
-    left: 10,
-    zIndex: 3,
-    width: 200,
-  };
-
   return (
     <div className="App">
-      <header className="App-header">
+      <div className="App-dropdown">
         {/* dropdown menu for selecting input source */}
+        <label className="dropdown-label">Input</label>
         <select
-          className="form-select form-select-sm"
+          className="form-select"
           value={inputSource === "file" ? selectedImage : inputSource}
           onChange={handleSourceChange}
-          style={dropdownStyle}
         >
           <option value="webcam">Webcam</option>
           {selectedImage && (
@@ -228,23 +191,25 @@ function App() {
           )}
           <option value="file">Choose an image file...</option>
         </select>
+      </div>
 
-        {/* hidden input field for selecting a file from the system */}
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          style={{ display: "none" }}
-        />
-
+      <div className="App-webcam">
         {/* render webcam component if input source is webcam */}
-        {inputSource === "webcam" && (
-          <Webcam ref={webcamRef} muted={true} style={webcamStyle} />
-        )}
+        {inputSource === "webcam" && <Webcam ref={webcamRef} muted={true} />}
+      </div>
 
+      <div className="App-bounding-box">
         {/* canvas for displaying bounding boxes */}
-        <canvas ref={boundingBoxRef} style={boundingBoxStyle} />
-      </header>
+        <canvas ref={boundingBoxRef} />
+      </div>
+
+      {/* hidden input field for selecting a file from the system */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        style={{ display: "none" }}
+      />
     </div>
   );
 }

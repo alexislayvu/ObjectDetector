@@ -1,14 +1,43 @@
 .App {
-  text-align: center;
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
   display: flex;
+  min-height: 100vh;
+  background-color: #232946;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  color: #fffffe;
+}
+
+.App-dropdown {
+  z-index: 3;
+  display: flex;
+  position: absolute;
+  top: 10px;
+  align-items: center;
+  width: 200px;
+}
+
+.App-webcam {
+  z-index: 1;
+  position: absolute;
+  right: 50px;
+  transform: scaleX(-1);
+}
+
+.App-bounding-box {
+  z-index: 2;
+  position: absolute;
+  right: 50px;
+}
+
+.dropdown-label {
+  font-weight: bold;
+}
+
+/* styling for the dropdown menu */
+.form-select {
+  font-family: "Roboto", sans-serif;
+  font-size: 14px;
+  border: 3px solid #121629;
+  margin-left: 10px;
 }
