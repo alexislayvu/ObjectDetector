@@ -18,61 +18,98 @@ function App() {
   // state to track input source (webcam or file)
   const [inputSource, setInputSource] = useState("webcam");
   const [selectedImage, setSelectedImage] = useState(null);
-  const [accuracyThreshold, setAccuracyThreshold] = useState(0.5); // Initial threshold value
+  const [accuracyThreshold, setAccuracyThreshold] = useState(0.-1); // Initial threshold value
 
-  // function to load COCO-SSD model and start object detection
+  const handleThresholdChange = (event) => {
+    console.log("Slider value:", event.target.value); // Log the slider value to the console
+    setAccuracyThreshold(event.target.value); // Set the accuracy threshold state
+  }; 
+
+  const slider = (
+    <div className="slider-container">
+      <input
+        type="range"
+        min="0"
+        max="1"
+        step="0.01"
+        value={accuracyThreshold !== -1 ? accuracyThreshold : 0.5} // Use accuracyThreshold if it's not null, otherwise use default value 0.5
+        onChange={handleThresholdChange}
+      />
+    </div>
+  );
+
+ // function to load COCO-SSD model and start object detection
   const runCoco = async () => {
-    const net = await cocossd.load(); // load the COCO-SSD model
-    console.log("COCO-SSD model loaded.");
+  const net = await cocossd.load(); // load the COCO-SSD model
+  console.log("COCO-SSD model loaded.");
 
-    // continuously detect objects in the video stream
-    setInterval(() => {
-      detectWebcam(net, accuracyThreshold); // call the detect function repeatedly
-    }, 10);
+  // continuously detect objects in the video stream
+  const intervalId = setInterval(() => {
+    detectWebcam(net, accuracyThreshold); // call the detect function repeatedly
+  }, 10);
+
+  // Return a cleanup function to clear the interval
+  return () => clearInterval(intervalId);
   };
-
-// function to detect objects in the video stream
-const detectWebcam = async (net, accuracyThreshold) => {
-  // check if webcam video data is available
-  if (
-    webcamRef.current &&
-    typeof webcamRef.current !== "undefined" &&
-    webcamRef.current !== null &&
-    webcamRef.current.video.readyState === 4
-  ) {
-    // get video properties
-    const video = webcamRef.current.video;
-    const videoWidth = video.videoWidth;
-    const videoHeight = video.videoHeight;
-
-    // set canvas dimensions to match video dimensions
-    video.width = videoWidth;
-    video.height = videoHeight;
-    boundingBoxRef.current.width = videoWidth;
-    boundingBoxRef.current.height = videoHeight;
-
-    // make object detections
-    const obj = await net.detect(video);
-
-    // draw bounding boxes around detected objects
-    const ctx = boundingBoxRef.current.getContext("2d");
-    ctx.clearRect(0, 0, videoWidth, videoHeight); // clear the canvas
-
-    // check if webcam feed is mirrored
-    const isMirrored = webcamRef.current.video.style.transform === "scaleX(-1)";
-
-    // Filter detections based on accuracy threshold
-    const filteredDetections = obj.filter(prediction => prediction.score >= accuracyThreshold);
-
-    // adjust bounding box coordinates if mirrored
-    drawRect(filteredDetections, ctx, videoWidth, videoHeight, isMirrored, accuracyThreshold);
-  }
-};
 
   // load COCO-SSD model when component mounts
   useEffect(() => {
-    runCoco();
+    // Check if accuracyThreshold is not -1
+    if (accuracyThreshold !== -1) {
+      let cleanupFunction;
+      runCoco().then(cleanup => {
+        cleanupFunction = cleanup;
+      });
+
+      // Cleanup function to clear the interval when component unmounts or when accuracyThreshold changes
+      return () => {
+        if (cleanupFunction) cleanupFunction();
+      };
+    }
   }, [accuracyThreshold]);
+
+  // function to detect objects in the video stream
+  const detectWebcam = async (net, accuracyThreshold) => {
+    // check if webcam video data is available
+    if (
+      webcamRef.current &&
+      typeof webcamRef.current !== "undefined" &&
+      webcamRef.current !== null &&
+      webcamRef.current.video.readyState === 4
+    ) {
+      // get video properties
+      const video = webcamRef.current.video;
+      const videoWidth = video.videoWidth;
+      const videoHeight = video.videoHeight;
+
+      // set canvas dimensions to match video dimensions
+      video.width = videoWidth;
+      video.height = videoHeight;
+      boundingBoxRef.current.width = videoWidth;
+      boundingBoxRef.current.height = videoHeight;
+
+      // make object detections
+      const obj = await net.detect(video);
+
+      // draw bounding boxes around detected objects
+      const ctx = boundingBoxRef.current.getContext("2d");
+      ctx.clearRect(0, 0, videoWidth, videoHeight); // clear the canvas
+
+      // check if webcam feed is mirrored
+      const isMirrored = webcamRef.current.video.style.transform === "scaleX(-1)";
+
+      // Filter detections based on accuracy threshold
+      const filteredDetections = obj.filter(prediction => prediction.score >= accuracyThreshold);
+
+      // adjust bounding box coordinates if mirrored
+      drawRect(filteredDetections, ctx, videoWidth, videoHeight, isMirrored, accuracyThreshold);
+    }
+  };
+
+  // // load COCO-SSD model when component mounts
+  // useEffect(() => {
+  //   runCoco();
+  // }, [accuracyThreshold]);
 
   // state to store the URL of the selected image file
   const [imageUrl, setImageUrl] = useState(null);
@@ -179,12 +216,6 @@ const detectWebcam = async (net, accuracyThreshold) => {
     };
   };
 
-  const handleThresholdChange = (event) => {
-    const sliderValue = parseFloat(event.target.value); 
-    console.log("Slider value:", sliderValue); // Log the slider value to the console
-    setAccuracyThreshold(sliderValue); // Set the accuracy threshold state
-  }; 
-
   // styles
   const webcamStyle = {
     display: inputSource === "webcam" ? "block" : "none",
@@ -219,19 +250,7 @@ const detectWebcam = async (net, accuracyThreshold) => {
     zIndex: 10,
   };
 
-  const slider = (
-    <div className="slider-container">
-      <input
-        type="range"
-        min="0"
-        max="1"
-        step="0.01"
-        value={accuracyThreshold} // Map the slider value to represent percentages
-        onChange={handleThresholdChange}
-      />
-    </div>
-  );
-
+  
   return (
     <div className="App">
       <header className="App-header">
