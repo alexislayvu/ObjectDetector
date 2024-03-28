@@ -1,3 +1,4 @@
+/* styling for the entire application */
 .App {
   display: flex;
   min-height: 100vh;
@@ -8,6 +9,7 @@
   color: #fffffe;
 }
 
+/* styles for positioning the dropdown menu */
 .App-dropdown {
   z-index: 3;
   display: flex;
@@ -17,24 +19,27 @@
   width: 200px;
 }
 
+/* styles for webcam canvas */
 .App-webcam {
   z-index: 1;
   position: absolute;
   right: 50px;
-  transform: scaleX(-1);
+  transform: scaleX(-1); /* mirror webcam feed horizontally */
 }
 
+/* styles for bounding box */
 .App-bounding-box {
   z-index: 2;
   position: absolute;
   right: 50px;
 }
 
+/* styles for dropdown label */
 .dropdown-label {
   font-weight: bold;
 }
 
-/* styling for the dropdown menu */
+/* styling for the ~actual~ dropdown menu */
 .form-select {
   font-family: "Roboto", sans-serif;
   font-size: 14px;
