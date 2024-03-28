@@ -210,6 +210,16 @@ function App() {
         onChange={handleFileChange}
         style={{ display: "none" }}
       />
+
+      <div className="App-md-slider">
+        <input
+          type="range"
+          min="1"
+          max="10"
+          step="1"
+          style={{ position: "fixed", top: "80px", left: "10px", zIndex: "3" }}
+        />
+      </div>
     </div>
   );
 }
