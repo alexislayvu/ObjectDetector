@@ -5,6 +5,8 @@ import Webcam from "react-webcam";
 import "./App.css";
 import { drawRect } from "./utilities";
 
+
+
 // initialize TensorFlow.js backend
 await tf.ready();
 
@@ -13,6 +15,10 @@ function App() {
   const webcamRef = useRef(null);
   const boundingBoxRef = useRef(null);
   const fileInputRef = useRef(null);
+  // State variable to store the value of output2
+  const [output2Value, setOutput2Value] = useState(1); // Initializing with an empty string, assuming it will be updated later
+   // Define net as a state variable
+   const [net, setNet] = useState(null);
 
   // state to track input source (webcam or file)
   const [inputSource, setInputSource] = useState("webcam");
@@ -20,7 +26,8 @@ function App() {
 
   // function to load COCO-SSD model and start object detection
   const runCoco = async () => {
-    const net = await cocossd.load(); // load the COCO-SSD model
+    const loadedNet = await cocossd.load(); // load the COCO-SSD model
+    setNet(loadedNet); // Set the loaded model to the net state variable
     console.log("COCO-SSD model loaded.");
 
     // continuously detect objects in the video stream
@@ -29,46 +36,79 @@ function App() {
     }, 10);
   };
 
-  // function to detect objects in the video stream
-  const detectWebcam = async (net) => {
-    // check if webcam video data is available
-    if (
-      webcamRef.current &&
-      typeof webcamRef.current !== "undefined" &&
-      webcamRef.current !== null &&
-      webcamRef.current.video.readyState === 4
-    ) {
-      // get video properties
-      const video = webcamRef.current.video;
-      const videoWidth = video.videoWidth;
-      const videoHeight = video.videoHeight;
+ // function to detect objects in the video stream
+ const detectWebcam = async (net) => {
 
-      // set canvas dimensions to match video dimensions
-      video.width = videoWidth;
-      video.height = videoHeight;
-      boundingBoxRef.current.width = videoWidth;
-      boundingBoxRef.current.height = videoHeight;
+  // Check if net is defined before using it
+  if (!net) return;
+  // check if webcam video data is available
+  if (
+    webcamRef.current &&
+    typeof webcamRef.current !== "undefined" &&
+    webcamRef.current !== null &&
+    webcamRef.current.video.readyState === 4
+  ) {
+    // get video properties
+    const video = webcamRef.current.video;
+    const videoWidth = video.videoWidth;
+    const videoHeight = video.videoHeight;
 
-      // make object detections
-      const obj = await net.detect(video);
+    // set canvas dimensions to match video dimensions
+    video.width = videoWidth;
+    video.height = videoHeight;
+    boundingBoxRef.current.width = videoWidth;
+    boundingBoxRef.current.height = videoHeight;
 
-      // draw bounding boxes around detected objects
-      const ctx = boundingBoxRef.current.getContext("2d");
-      ctx.clearRect(0, 0, videoWidth, videoHeight); // clear the canvas
+    // make object detections
+    const obj = await net.detect(video);
 
-      // check if webcam feed is mirrored
-      const isMirrored =
-        webcamRef.current.video.style.transform === "scaleX(-1)";
+    // Get the random limit value from output2Value
+    const randomLimit = parseInt(output2Value); // Assuming output2Value contains the random limit value
+    console.log("Random Limit:", randomLimit); // Log the random limit
 
-      // adjust bounding box coordinates if mirrored
-      drawRect(obj, ctx, videoWidth, videoHeight, isMirrored);
-    }
+    // Limit the number of objects to the random number
+    const limitedObjects = obj.slice(0, randomLimit);
+
+    // draw bounding boxes around detected objects
+    const ctx = boundingBoxRef.current.getContext("2d");
+    ctx.clearRect(0, 0, videoWidth, videoHeight); // clear the canvas
+
+    // check if webcam feed is mirrored
+    const isMirrored = webcamRef.current.video.style.transform === "scaleX(-1)";
+
+    // adjust bounding box coordinates if mirrored
+    drawRect(limitedObjects, ctx, videoWidth, videoHeight, isMirrored);
+  }
+  // Request the next animation frame to continue detecting objects
+  requestAnimationFrame(() => detectWebcam(net));
+};
+
+ // load COCO-SSD model when component mounts
+ 
+ useEffect(() => {
+  runCoco();
+
+  // Add event listener for output2Change event
+  const handleOutput2Change = () => {
+      setOutput2Value(document.getElementById("value2").innerHTML);
   };
 
-  // load COCO-SSD model when component mounts
-  useEffect(() => {
-    runCoco();
-  }, []);
+  window.addEventListener("output2Change", handleOutput2Change);
+
+  // Clean up event listener on component unmount
+  return () => {
+      window.removeEventListener("output2Change", handleOutput2Change);
+  };
+}, []);
+
+// Update the canvas when output2Value changes
+useEffect(() => {
+  if (inputSource === "webcam") {
+      detectWebcam(net);
+  } else {
+      detectImage(net, imageUrl);
+  }
+}, [output2Value]);
 
   // state to store the URL of the selected image file
   const [imageUrl, setImageUrl] = useState(null);
@@ -137,43 +177,47 @@ function App() {
     }
   };
 
-  // function to detect objects in an image file
-  const detectImage = async (net, imageFile) => {
-    const img = document.createElement("img");
-    img.src = imageFile;
-    img.onload = async () => {
-      const ctx = boundingBoxRef.current.getContext("2d");
+// function to detect objects in an image file
+const detectImage = async (net, imageFile) => {
+  const img = document.createElement("img");
+  img.src = imageFile;
+  img.onload = async () => {
+    const ctx = boundingBoxRef.current.getContext("2d");
 
-      // clear the canvas
-      ctx.clearRect(
-        0,
-        0,
-        boundingBoxRef.current.width,
-        boundingBoxRef.current.height
-      );
+    // clear the canvas
+    ctx.clearRect(0, 0, boundingBoxRef.current.width, boundingBoxRef.current.height);
 
-      // calculate scaling factors to fit the image within the canvas
-      const scaleFactor = Math.min(
-        boundingBoxRef.current.width / img.width,
-        boundingBoxRef.current.height / img.height
-      );
+    // calculate scaling factors to fit the image within the canvas
+    const scaleFactor = Math.min(
+      boundingBoxRef.current.width / img.width,
+      boundingBoxRef.current.height / img.height
+    );
 
-      // calculate scaled dimensions
-      const scaledWidth = img.width * scaleFactor;
-      const scaledHeight = img.height * scaleFactor;
+    // calculate scaled dimensions
+    const scaledWidth = img.width * scaleFactor;
+    const scaledHeight = img.height * scaleFactor;
 
-      // calculate position to center the image
-      const x = (boundingBoxRef.current.width - scaledWidth) / 2;
-      const y = (boundingBoxRef.current.height - scaledHeight) / 2;
+    // calculate position to center the image
+    const x = (boundingBoxRef.current.width - scaledWidth) / 2;
+    const y = (boundingBoxRef.current.height - scaledHeight) / 2;
 
-      // draw the image on the canvas
-      ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
+    // draw the image on the canvas
+    ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
 
-      // detect objects in the image
-      const obj = await net.detect(boundingBoxRef.current);
-      drawRect(obj, ctx); // draw detections on the canvas
-    };
+    // detect objects in the image
+    const obj = await net.detect(boundingBoxRef.current);
+
+    // Get the random limit value from output2Value
+    const randomLimit = parseInt(output2Value); // Assuming output2Value contains the random limit value
+    console.log("Random Limit:", randomLimit); // Log the random limit
+
+    // Limit the number of objects to the random number
+    const limitedObjects = obj.slice(0, randomLimit);
+
+    drawRect(limitedObjects, ctx); // draw detections on the canvas
   };
+};
+
 
   // styles
   const webcamStyle = {
