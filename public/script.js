@@ -23,5 +23,3 @@ rangefield2.oninput = function() {
     window.dispatchEvent(output2ChangeEvent);
 }
 
-
-
