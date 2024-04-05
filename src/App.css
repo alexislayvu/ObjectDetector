@@ -1,52 +1,61 @@
-/* styling for the entire application */
-.App {
+.container {
   display: flex;
-  height: 100vh;
-  background-color: #232946;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
   color: #fffffe;
 }
 
-/* styles for positioning the dropdown menu */
-.App-dropdown {
-  z-index: 3;
-  display: flex;
-  position: fixed;
-  top: 80px;
-  right: 480px;
-  align-items: center;
-  width: 200px;
+.container > div {
+  width: 48%;
+  margin-bottom: 20px;
 }
 
-/* styles for dropdown label */
-.dropdown-label {
-  font-weight: bold;
+.slider1 {
+  order: 1;
 }
 
-/* styling for the ~actual~ dropdown menu */
-.form-select {
-  font-family: "Roboto", sans-serif;
-  font-size: 14px;
-  border: 3px solid #121629;
-  margin-left: 10px;
-  text-overflow: ellipsis;
+.dropdown {
+  order: 2;
 }
 
-/* styles for webcam canvas */
-.App-webcam {
-  z-index: 1;
-  position: fixed;
-  right: 40px;
-  bottom: 40px;
-  transform: scaleX(-1); /* mirror webcam feed horizontally */
+.slider2 {
+  order: 3;
 }
 
-/* styles for bounding box */
-.App-bounding-box {
-  z-index: 2;
-  position: fixed;
-  right: 40px;
-  bottom: 40px;
+.webcam {
+  order: 4;
+}
+
+.webcam-image {
+  transform: scaleX(-1); /* mirror webcam */
+}
+
+@media screen and (max-width: 575px) {
+  .container {
+    flex-direction: column;
+  }
+
+  .container > div {
+    width: 100%;
+  }
+
+  .webcam-image {
+    width: 480px;
+  }
+
+  .dropdown {
+    order: 1;
+  }
+
+  .webcam {
+    order: 2;
+  }
+
+  .slider1 {
+    order: 3;
+  }
+
+  .slider2 {
+    order: 4;
+  }
 }
