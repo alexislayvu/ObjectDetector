@@ -1,61 +1,109 @@
 .container {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  color: #fffffe;
+  grid-template-columns: repeat(auto-fill, minmax(48%, 1fr));
+  grid-gap: 20px;
+  display: grid;
+  color: #ffffff;
 }
 
-.container > div {
-  width: 48%;
-  margin-bottom: 20px;
-}
-
-.slider1 {
-  order: 1;
-}
-
+/* styling for dropdown menu positioning */
 .dropdown {
-  order: 2;
+  grid-column: span 2;
+  margin-top: 5px;
 }
 
-.slider2 {
-  order: 3;
+/* styling for dropdown menu label */
+.dropdown-label {
+  margin-bottom: 10px;
 }
 
+/* styling for sliders */
+.md_slider,
+.st_slider {
+  grid-column: span 1;
+}
+
+/* styling for webcam positioning */
 .webcam {
-  order: 4;
+  grid-column: span 2;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.webcam-image {
-  transform: scaleX(-1); /* mirror webcam */
+/* styling for bounding box positioning */
+.webcam canvas {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
 }
 
-@media screen and (max-width: 575px) {
+/* styling for actual webcam feed */
+.webcam .webcam-feed {
+  transform: scaleX(-1);
+  width: 100%;
+}
+
+/* styling for uploaded image */
+.webcam .image-canvas {
+  top: calc(50% + 35vh);
+  transform: translate(-50%, -50%) rotate(360deg);
+}
+
+/* media queries for different screen sizes */
+@media screen and (min-width: 1400px) {
+  .webcam canvas {
+    width: 48%;
+  }
+
+  .webcam .image-canvas {
+    top: calc(50% + 35vh);
+  }
+}
+
+@media screen and (min-width: 1200px) and (max-width: 1399px) {
+  .webcam canvas {
+    width: 58%;
+  }
+
+  .webcam .image-canvas {
+    top: calc(50% + 35vh);
+  }
+}
+
+@media screen and (min-width: 992px) and (max-width: 1199px) {
+  .webcam canvas {
+    width: 68%;
+  }
+
+  .webcam .image-canvas {
+    top: calc(50% + 35vh);
+  }
+}
+
+@media screen and (min-width: 768px) and (max-width: 991px) {
+  .webcam canvas {
+    width: 92%;
+  }
+
+  .webcam .image-canvas {
+    top: calc(50% + 35vh);
+  }
+}
+
+@media screen and (max-width: 767px) {
   .container {
-    flex-direction: column;
+    grid-template-columns: repeat(auto-fill, minmax(48%, 1fr));
   }
 
-  .container > div {
-    width: 100%;
+  .md_slider,
+  .st_slider {
+    grid-column: span 2;
   }
 
-  .webcam-image {
-    width: 480px;
-  }
-
-  .dropdown {
-    order: 1;
-  }
-
-  .webcam {
-    order: 2;
-  }
-
-  .slider1 {
-    order: 3;
-  }
-
-  .slider2 {
-    order: 4;
+  .webcam .image-canvas {
+    top: calc(50% + 28vh);
   }
 }

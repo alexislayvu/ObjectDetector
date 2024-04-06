@@ -176,8 +176,8 @@ function App() {
   };
 
   return (
-    <div class="container">
-      <div class="dropdown">
+    <div className="container">
+      <div className="dropdown">
         <label className="dropdown-label">Input</label>
         <select
           className="form-select"
@@ -191,23 +191,31 @@ function App() {
           <option value="file">Choose an image file...</option>
         </select>
       </div>
-      <div class="slider1">
-        <label for="customRange1" class="form-label">
+
+      <div className="md_slider">
+        <label htmlFor="customRange1" className="form-label">
           Max Detections
         </label>
-        <input type="range" class="form-range" id="customRange1" />
+        <input type="range" className="form-range" id="customRange1" />
       </div>
-      <div class="slider2">
-        <label for="customRange1" class="form-label">
+
+      <div className="st_slider">
+        <label htmlFor="customRange2" className="form-label">
           Score Threshold
         </label>
-        <input type="range" class="form-range" id="customRange1" />
+        <input type="range" className="form-range" id="customRange2" />
       </div>
-      <div class="webcam">
+
+      <div className="webcam">
         {inputSource === "webcam" && (
-          <Webcam ref={webcamRef} muted={true} className="webcam-image" />
+          <Webcam ref={webcamRef} muted={true} className="webcam-feed" />
         )}
-        <canvas ref={boundingBoxRef} />
+        <canvas
+          ref={boundingBoxRef}
+          className={
+            inputSource === "webcam" ? "webcam-canvas" : "image-canvas"
+          }
+        />
       </div>
 
       <input
@@ -217,225 +225,7 @@ function App() {
         style={{ display: "none" }}
       />
     </div>
-
-    // FROM SKELETON 2 -> dropdown, slider 1, slider 2, canvas
-    // <div class="container text-center">
-    //   <div class="row">
-    //     <div class="col-md-3">
-    //       <h2></h2>
-    //       <br></br>
-    //       <p></p>
-    //     </div>
-    //     <div class="col-md-6 ms-auto">
-    //       <select
-    //         className="form-select"
-    //         value={inputSource === "file" ? selectedImage : inputSource}
-    //         onChange={handleSourceChange}
-    //       >
-    //         <option value="webcam">Webcam</option>
-    //         {selectedImage && (
-    //           <option value={selectedImage}>{selectedImage}</option>
-    //         )}
-    //         <option value="file">Choose an image file...</option>
-    //       </select>
-    //     </div>
-    //   </div>
-    //   <div class="row">
-    //     <div class="col-md-3">
-    //       <br></br>
-    //       <br></br>
-    //       <br></br>
-    //       <br></br>
-    //       <br></br>
-    //       <br></br>
-    //       <label for="customRange1" class="form-label">
-    //         Max Detections
-    //       </label>
-    //       <input type="range" class="form-range" id="customRange1" />
-    //       <br></br>
-    //       <br></br>
-    //       <br></br>
-    //       <label for="customRange1" class="form-label">
-    //         Score Threshold
-    //       </label>
-    //       <input type="range" class="form-range" id="customRange1" />
-    //     </div>
-    //     <div class="col-md-6 ms-auto">
-    //       <div
-    //         style={{
-    //           height: inputSource === "webcam" ? "480px" : "500px",
-    //           overflow: "hidden",
-    //         }}
-    //       >
-    //         {inputSource === "webcam" && (
-    //           <Webcam
-    //             ref={webcamRef}
-    //             muted={true}
-    //             className="webcam-container"
-    //           />
-    //         )}
-    //       </div>
-    //       <canvas ref={boundingBoxRef} className="bounding-box-container" />
-    //     </div>
-    //   </div>
-    //   <div class="row">
-    //     <div class="col-md-3">
-    //       <label for="customRange1" class="form-label">
-    //         Max Detections
-    //       </label>
-    //       <input type="range" class="form-range" id="customRange1" />
-    //       <br></br>
-    //       <label for="customRange1" class="form-label">
-    //         Max Detections 2
-    //       </label>
-    //       <input type="range" class="form-range" id="customRange1" />
-    //     </div>
-    //   </div>
-    //   <div class="row">
-    //     <div class="col-md-3">
-    //       <label for="customRange1" class="form-label">
-    //         Score Threshold
-    //       </label>
-    //       <input type="range" class="form-range" id="customRange1" />
-    //     </div>
-    //   </div>
-
-    //   <input
-    //     type="file"
-    //     ref={fileInputRef}
-    //     onChange={handleFileChange}
-    //     style={{ display: "none" }}
-    //   />
-    // </div>
-
-    // FROM SKELETON 1 -> dropdown, canvas, slider 1, slider 2
-    // <div class="container text-center">
-    //   <div class="row">
-    //     <div class="col-md-6 ms-auto">
-    //       {/* <label className="dropdown-label">Input</label> */}
-    //       <select
-    //         className="form-select"
-    //         value={inputSource === "file" ? selectedImage : inputSource}
-    //         onChange={handleSourceChange}
-    //       >
-    //         <option value="webcam">Webcam</option>
-    //         {selectedImage && (
-    //           <option value={selectedImage}>{selectedImage}</option>
-    //         )}
-    //         <option value="file">Choose an image file...</option>
-    //       </select>
-    //     </div>
-    //   </div>
-    //   <div class="row">
-    //     <div class="col-md-6 ms-auto">
-    //       {inputSource === "webcam" && (
-    //         <Webcam ref={webcamRef} muted={true} className="webcam-container" />
-    //       )}
-    //       <canvas ref={boundingBoxRef} className="bounding-box-container" />
-    //     </div>
-    //   </div>
-    //   <div class="row">
-    //     <div class="col-md-3 md-auto">
-    //       <label for="customRange1" class="form-label">
-    //         Max Detections
-    //       </label>
-    //       <input type="range" class="form-range" id="customRange1" />
-    //     </div>
-    //   </div>
-    //   <div class="row">
-    //     <div class="col-md-3 md-auto">
-    //       <label for="customRange1" class="form-label">
-    //         Score Threshold
-    //       </label>
-    //       <input type="range" class="form-range" id="customRange1" />
-    //     </div>
-    //   </div>
-
-    //   <input
-    //     type="file"
-    //     ref={fileInputRef}
-    //     onChange={handleFileChange}
-    //     style={{ display: "none" }}
-    //   />
-    // </div>
   );
-
-  // STARTING SKELETON 2
-  // <div class="container text-center">
-  //     <div class="row">
-  //       <div class="col-md-3 ms-md-auto">DROPDOWN</div>
-  //     </div>
-
-  //     <div class="row">
-  //       <div class="col-md-3">.col-md-3 .ms-md-auto</div>
-  //     </div>
-
-  //     <div class="row">
-  //       <div class="col-md-3">.col-md-3 .ms-md-auto</div>
-  //     </div>
-
-  //     <div class="row">
-  //       <div class="col-md-3 ms-md-auto">WEBCAM</div>
-  //     </div>
-  //   </div>
-
-  // STARTING SKELETON 1
-  // return (
-  //   <div class="container text-center">
-  //     <div class="row">
-  //       <div class="col-md-3 ms-auto">DROPDOWN</div>
-  //     </div>
-  //     <div class="row">
-  //       <div class="col-md-3 ms-auto">WEBCAM</div>
-  //     </div>
-  //     <div class="row">
-  //       <div class="col-md-3 md-auto">SLIDER 1</div>
-  //     </div>
-  //     <div class="row">
-  //       <div class="col-md-3 md-auto">SLIDER 2</div>
-  //     </div>
-  //   </div>
-  // );
-
-  // INITIAL CODE
-  // return (
-  //   <div className="container">
-  //     <div className="App-dropdown">
-  //       {/* dropdown menu for selecting input source */}
-  //       <label className="dropdown-label">Input</label>
-  //       <select
-  //         className="form-select"
-  //         value={inputSource === "file" ? selectedImage : inputSource}
-  //         onChange={handleSourceChange}
-  //       >
-  //         <option value="webcam">Webcam</option>
-  //         {selectedImage && (
-  //           <option value={selectedImage}>{selectedImage}</option>
-  //         )}
-  //         <option value="file">Choose an image file...</option>
-  //       </select>
-  //     </div>
-
-  //     <div className="App-webcam">
-  //       {/* render webcam component if input source is webcam */}
-  //       {inputSource === "webcam" && (
-  //         <Webcam ref={webcamRef} muted={true} className="webcam-container" />
-  //       )}
-  //     </div>
-  //     <div className="App-bounding-box">
-  //       {/* canvas for displaying bounding boxes */}
-  //       <canvas ref={boundingBoxRef} className="bounding-box-container" />
-  //     </div>
-
-  //     {/* hidden input field for selecting a file from the system */}
-  //     <input
-  //       type="file"
-  //       ref={fileInputRef}
-  //       onChange={handleFileChange}
-  //       style={{ display: "none" }}
-  //     />
-  //   </div>
-  // );
 }
 
 export default App;
