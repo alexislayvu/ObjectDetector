@@ -4,6 +4,7 @@ import * as cocossd from "@tensorflow-models/coco-ssd";
 import Webcam from "react-webcam";
 import "./App.css";
 import { drawRect } from "./utilities";
+import debounce from "lodash/debounce"; // Import debounce function from lodash library
 
 
 // initialize TensorFlow.js backend
@@ -18,16 +19,24 @@ function App() {
   // state to track input source (webcam or file)
   const [inputSource, setInputSource] = useState("webcam");
   const [selectedImage, setSelectedImage] = useState(null);
-  const [accuracyThreshold, setAccuracyThreshold] = useState(0.-1); // Initial threshold value
+  const [accuracyThreshold, setAccuracyThreshold] = useState(-1); // Initial threshold value
+
+  const debouncedHandleThresholdChange = useRef(
+    debounce((value) => {
+      setAccuracyThreshold(parseFloat(value));
+    }, 300) // Adjust debounce delay as needed
+  ).current;
 
   const handleThresholdChange = (event) => {
     console.log("Slider value:", event.target.value); // Log the slider value to the console
-    setAccuracyThreshold(event.target.value); // Set the accuracy threshold state
+    debouncedHandleThresholdChange(event.target.value); // Set the accuracy threshold state
   }; 
 
   const slider = (
     <div className="slider-container">
+      <label className="slider-label"> Accuracy Threshold </label>
       <input
+        className="slider"
         type="range"
         min="0"
         max="1"
@@ -105,11 +114,6 @@ function App() {
       drawRect(filteredDetections, ctx, videoWidth, videoHeight, isMirrored, accuracyThreshold);
     }
   };
-
-  // // load COCO-SSD model when component mounts
-  // useEffect(() => {
-  //   runCoco();
-  // }, [accuracyThreshold]);
 
   // state to store the URL of the selected image file
   const [imageUrl, setImageUrl] = useState(null);

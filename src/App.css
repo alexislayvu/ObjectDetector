@@ -13,7 +13,6 @@
   }
 }
 
-
 .App-header {
   background-color: #CCCCFF;
   min-height: 100vh;
@@ -52,11 +51,9 @@ body{
 }
 
 *{
-
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-
 }
 
 .field-group{
@@ -92,6 +89,48 @@ body{
   cursor: pointer;
 }
 
+/* Everything below this line is the CSS for the slider component that El made */
 .slider-container {
-  margin-top: 500px; /* Adjust margin as needed */
+  margin-top: 550px; /* Adjust margin as needed */
+}
+
+.slider-label {
+  color: #6e2689; /* White color for the label text */
+  font-size: 1em; /* Adjust font size as needed */
+  padding-bottom: 10px; /* Add padding between the label and the slider */
+}
+
+.slider {
+  -webkit-appearance: none;
+  width: 300px; /* Adjust width as needed */
+  height: 15px;
+  border-radius: 10px;
+  background: #5c3963; 
+  outline: none;
+  opacity: 0.7;
+  -webkit-transition: 0.2s;
+  transition: opacity 0.2s;
+  margin: 0 auto; /* Center the slider horizontally */
+}
+
+.slider:hover {
+  opacity: 1;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background: #f504ad; /* Hot pink */
+  cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background: #ff69b4; /* Hot pink */
+  cursor: pointer;
 }
