@@ -26,6 +26,9 @@ function App() {
   const [inputSource, setInputSource] = useState("webcam");
   const [selectedImage, setSelectedImage] = useState(null);
 
+  // State to store the URL of the selected image file
+  const [imageUrl, setImageUrl] = useState(null); // Declare imageUrl here
+
   // Function to load COCO-SSD model and start object detection
   const runCoco = async () => {
     const loadedNet = await cocossd.load(); // Load the COCO-SSD model
@@ -60,11 +63,11 @@ function App() {
       // Make object detections
       const obj = await net.detect(video);
 
-      // Get the random limit value from output2Value
-      const randomLimit = parseInt(output2Value); // Assuming output2Value contains the random limit value
-
-      // Limit the number of objects to the random number
-      const limitedObjects = obj.slice(0, randomLimit);
+      // Get the limit value from output2Value
+      const limit = parseInt(output2Value); // Assuming output2Value contains the limit value
+      console.log("Limit:", limit); // Log the limit
+      // Limit the number of objects to the number
+      const limitedObjects = obj.slice(0, limit);
 
       // Draw bounding boxes around detected objects
       const ctx = boundingBoxRef.current.getContext("2d");
@@ -81,10 +84,16 @@ function App() {
     requestAnimationFrame(() => detectWebcam(net));
   };
 
-  // Load COCO-SSD model when component mounts
+  // load COCO-SSD model when component mounts
   useEffect(() => {
-    initializeTF();
-    runCoco();
+    const loadModelAndDetect = async () => {
+      const loadedNet = await cocossd.load(); // load the COCO-SSD model
+      setNet(loadedNet); // Set the loaded model to the net state variable
+      console.log("COCO-SSD model loaded.");
+      detectWebcam(loadedNet); // Call detectWebcam with the loaded model
+    };
+
+    loadModelAndDetect();
 
     // Add event listener for output2Change event
     const handleOutput2Change = () => {
@@ -106,7 +115,7 @@ function App() {
     } else {
       detectImage(net, imageUrl);
     }
-  }, [output2Value]);
+  }, [output2Value, inputSource, net, imageUrl]); // Include inputSource, net, and imageUrl as dependencies
 
   // Event handler for changing input source (webcam or file)
   const handleSourceChange = async (event) => {
@@ -207,11 +216,11 @@ function App() {
       // Detect objects in the image
       const obj = await net.detect(boundingBoxRef.current);
 
-      // Get the random limit value from output2Value
-      const randomLimit = parseInt(output2Value); // Assuming output2Value contains the random limit value
+      // Get the limit value from output2Value
+      const limit = parseInt(output2Value); // Assuming output2Value contains the limit value
 
-      // Limit the number of objects to the random number
-      const limitedObjects = obj.slice(0, randomLimit);
+      // Limit the number of objects to the number
+      const limitedObjects = obj.slice(0, limit);
 
       drawRect(limitedObjects, ctx); // Draw detections on the canvas
     };
