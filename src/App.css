@@ -43,7 +43,7 @@
 /* styling for actual webcam feed */
 .webcam .webcam-feed {
   transform: scaleX(-1);
-  width: 100%;
+  /* width: 100%; */
 }
 
 /* styling for uploaded image */
@@ -101,6 +101,10 @@
   .md_slider,
   .st_slider {
     grid-column: span 2;
+  }
+
+  .webcam .webcam-feed {
+    width: 100%;
   }
 
   .webcam .image-canvas {
