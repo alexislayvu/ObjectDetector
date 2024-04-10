@@ -24,23 +24,22 @@ function App() {
   // state to store the score threshold
   const [scoreThreshold, setScoreThreshold] = useState(-1);
 
-  console.log(scoreThreshold);
+  // state to store the maximum number of detections
+  const [maxDetections, setMaxDetections] = useState(1);
 
-  // load COCO-SSD model and start object detection when the component mounts or when the scoreThreshold changes
   useEffect(() => {
-    // check if scoreThreshold is not -1
     if (scoreThreshold !== -1) {
       let cleanupFunction;
       runCoco().then((cleanup) => {
         cleanupFunction = cleanup;
       });
 
-      // cleanup function to clear the interval when component unmounts or when scoreThreshold changes
+      // cleanup function to clear the interval when component unmounts or when scoreThreshold or maxDetections changes
       return () => {
         if (cleanupFunction) cleanupFunction();
       };
     }
-  }, [scoreThreshold]);
+  }, [scoreThreshold, maxDetections]);
 
   // function to load the COCO-SSD model and start object detection on the webcam feed
   const runCoco = async () => {
@@ -49,7 +48,7 @@ function App() {
 
     // continuously detect objects in the video stream
     const intervalId = setInterval(() => {
-      detectWebcam(net, scoreThreshold); // call the detect function repeatedly
+      detectWebcam(net, scoreThreshold, maxDetections); // call the detect function repeatedly
     }, 10);
 
     // return a cleanup function to clear the interval
@@ -64,7 +63,7 @@ function App() {
       setImageUrl(imageUrl); // store the URL of the selected image
       setSelectedImage(file.name); // update selected image state
       const net = await cocossd.load();
-      detectImage(net, imageUrl, scoreThreshold); // pass scoreThreshold to detectImage
+      detectImage(net, imageUrl, scoreThreshold, maxDetections);
     }
   };
 
@@ -123,9 +122,7 @@ function App() {
 
         // if switching back to image file, perform detections again
         const net = await cocossd.load();
-        const obj = await net.detect(boundingBoxRef.current);
-
-        drawRect(obj, ctx); // draw detections on the canvas
+        detectImage(net, imageUrl, scoreThreshold, maxDetections);
       };
 
       img.src = imageUrl;
@@ -137,57 +134,28 @@ function App() {
     const newScoreThreshold = parseFloat(event.target.value);
     setScoreThreshold(newScoreThreshold);
 
-    // trigger object detection with the updated threshold value
+    // trigger object detection with the updated score threshold and max detections value
     if (inputSource !== "webcam" && imageUrl) {
       cocossd.load().then((net) => {
-        detectImage(net, imageUrl, newScoreThreshold);
+        detectImage(net, imageUrl, newScoreThreshold, maxDetections);
       });
     }
   };
 
-  // function to detect objects in the video stream
-  const detectWebcam = async (net, scoreThreshold) => {
-    // check if webcam video data is available
-    if (
-      webcamRef.current &&
-      typeof webcamRef.current !== "undefined" &&
-      webcamRef.current !== null &&
-      webcamRef.current.video.readyState === 4
-    ) {
-      // get video properties
-      const video = webcamRef.current.video;
-      const videoWidth = video.videoWidth;
-      const videoHeight = video.videoHeight;
+  // function to update the maxDetections state and trigger object detection
+  const handleMaxDetectionsChange = async (event) => {
+    const newMaxDetections = parseInt(event.target.value);
+    setMaxDetections(newMaxDetections);
 
-      // set canvas dimensions to match video dimensions
-      video.width = videoWidth;
-      video.height = videoHeight;
-      boundingBoxRef.current.width = videoWidth;
-      boundingBoxRef.current.height = videoHeight;
-
-      // make object detections
-      const obj = await net.detect(video);
-
-      // draw bounding boxes around detected objects
-      const ctx = boundingBoxRef.current.getContext("2d");
-      ctx.clearRect(0, 0, videoWidth, videoHeight); // clear the canvas
-
-      // check if webcam feed is mirrored
-      const isMirrored =
-        webcamRef.current.video.style.transform === "scaleX(-1)";
-
-      // Filter detections based on scoreThreshold
-      const filteredDetections = obj.filter(
-        (prediction) => prediction.score >= scoreThreshold
-      );
-
-      // adjust bounding box coordinates if mirrored
-      drawRect(filteredDetections, ctx, videoWidth, videoHeight, isMirrored);
+    // trigger object detection with the updated score threshold and max detections value
+    if (inputSource !== "webcam" && imageUrl) {
+      const net = await cocossd.load();
+      detectImage(net, imageUrl, scoreThreshold, newMaxDetections);
     }
   };
 
   // function to detect objects in an image file
-  const detectImage = async (net, imageFile, scoreThreshold) => {
+  const detectImage = async (net, imageFile, scoreThreshold, maxDetections) => {
     const img = document.createElement("img");
     img.src = imageFile;
     img.onload = async () => {
@@ -221,17 +189,61 @@ function App() {
       // detect objects in the image
       const obj = await net.detect(boundingBoxRef.current);
 
-      // Log detected objects
-      console.log("Detected objects:", obj);
+      // filter detections based on scoreThreshold and maxDetections
+      const filteredDetections = obj
+        .filter((prediction) => prediction.score >= scoreThreshold)
+        .slice(0, maxDetections);
 
-      // Filter detections based on scoreThreshold
+      // draw rectangles around filtered detections
+      drawRect(filteredDetections, ctx);
+    };
+  };
+
+  // function to detect objects in the video stream
+  const detectWebcam = async (net, scoreThreshold, maxDetections) => {
+    // check if webcam video data is available
+    if (
+      webcamRef.current &&
+      typeof webcamRef.current !== "undefined" &&
+      webcamRef.current !== null &&
+      webcamRef.current.video.readyState === 4
+    ) {
+      // get video properties
+      const video = webcamRef.current.video;
+      const videoWidth = video.videoWidth;
+      const videoHeight = video.videoHeight;
+
+      // set canvas dimensions to match video dimensions
+      video.width = videoWidth;
+      video.height = videoHeight;
+      boundingBoxRef.current.width = videoWidth;
+      boundingBoxRef.current.height = videoHeight;
+
+      // make object detections
+      const obj = await net.detect(video);
+
+      // draw bounding boxes around detected objects
+      const ctx = boundingBoxRef.current.getContext("2d");
+      ctx.clearRect(0, 0, videoWidth, videoHeight); // clear the canvas
+
+      // check if webcam feed is mirrored
+      const isMirrored =
+        webcamRef.current.video.style.transform === "scaleX(-1)";
+
+      // filter detections based on scoreThreshold
       const filteredDetections = obj.filter(
         (prediction) => prediction.score >= scoreThreshold
       );
 
-      // draw detections on the canvas with scoreThreshold
-      drawRect(filteredDetections, ctx);
-    };
+      // draw rectangles around filtered detections
+      drawRect(
+        filteredDetections.slice(0, maxDetections),
+        ctx,
+        videoWidth,
+        videoHeight,
+        isMirrored
+      );
+    }
   };
 
   return (
@@ -255,7 +267,18 @@ function App() {
         <label htmlFor="customRange1" className="form-label">
           Max Detections
         </label>
-        <input type="range" className="form-range" id="customRange1" />
+        <input
+          type="range"
+          className="form-range"
+          id="customRange1"
+          min="0"
+          max="10"
+          value={maxDetections}
+          onChange={handleMaxDetectionsChange}
+        />
+        <p>
+          Value: <span id="max_detections_value">{maxDetections}</span>
+        </p>
       </div>
 
       <div className="score_threshold_slider">
@@ -272,6 +295,12 @@ function App() {
           value={scoreThreshold !== -1 ? scoreThreshold : 0.5}
           onChange={handleThresholdChange}
         />
+        <p>
+          Value:{" "}
+          <span id="score_threshold_value">
+            {(scoreThreshold * 100).toFixed(0)}%
+          </span>
+        </p>
       </div>
 
       <div className="webcam">
