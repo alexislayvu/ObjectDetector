@@ -24,6 +24,8 @@ function App() {
   // state to store the score threshold
   const [scoreThreshold, setScoreThreshold] = useState(-1);
 
+  console.log(scoreThreshold);
+
   // load COCO-SSD model and start object detection when the component mounts or when the scoreThreshold changes
   useEffect(() => {
     // check if scoreThreshold is not -1
@@ -249,14 +251,14 @@ function App() {
         </select>
       </div>
 
-      <div className="md_slider">
+      <div className="max_detections_slider">
         <label htmlFor="customRange1" className="form-label">
           Max Detections
         </label>
         <input type="range" className="form-range" id="customRange1" />
       </div>
 
-      <div className="st_slider">
+      <div className="score_threshold_slider">
         <label htmlFor="customRange2" className="form-label">
           Score Threshold
         </label>

@@ -17,8 +17,8 @@
 }
 
 /* styling for sliders */
-.md_slider,
-.st_slider {
+.max_detections_slider,
+.score_threshold_slider {
   grid-column: span 1;
 }
 
@@ -98,8 +98,8 @@
     grid-template-columns: repeat(auto-fill, minmax(48%, 1fr));
   }
 
-  .md_slider,
-  .st_slider {
+  .max_detections_slider,
+  .score_threshold_slider {
     grid-column: span 2;
   }
 
