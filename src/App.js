@@ -22,22 +22,19 @@ function App() {
   const [imageUrl, setImageUrl] = useState(null);
 
   // state to store the score threshold
-  const [scoreThreshold, setScoreThreshold] = useState(-1);
+  const [scoreThreshold, setScoreThreshold] = useState(0.5); // initial scoreThreshold value of 0.5 (50%)
 
   // load COCO-SSD model and start object detection when the component mounts or when the scoreThreshold changes
   useEffect(() => {
-    // check if scoreThreshold is not -1
-    if (scoreThreshold !== -1) {
-      let cleanupFunction;
-      runCoco().then((cleanup) => {
-        cleanupFunction = cleanup;
-      });
+    let cleanupFunction;
+    runCoco().then((cleanup) => {
+      cleanupFunction = cleanup;
+    });
 
-      // cleanup function to clear the interval when component unmounts or when scoreThreshold changes
-      return () => {
-        if (cleanupFunction) cleanupFunction();
-      };
-    }
+    // cleanup function to clear the interval when component unmounts or when scoreThreshold changes
+    return () => {
+      if (cleanupFunction) cleanupFunction();
+    };
   }, [scoreThreshold]);
 
   // function to load the COCO-SSD model and start object detection on the webcam feed
