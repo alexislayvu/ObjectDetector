@@ -132,6 +132,7 @@ function App() {
   // function to update the scoreThreshold state and trigger object detection
   const handleThresholdChange = (event) => {
     const newScoreThreshold = parseFloat(event.target.value);
+    console.log("New Score Threshold Value:", newScoreThreshold); // debug statement
     setScoreThreshold(newScoreThreshold);
 
     // trigger object detection with the updated score threshold and max detections value
@@ -145,6 +146,7 @@ function App() {
   // function to update the maxDetections state and trigger object detection
   const handleMaxDetectionsChange = async (event) => {
     const newMaxDetections = parseInt(event.target.value);
+    console.log("New Max Detections Value:", newMaxDetections); // debug statement
     setMaxDetections(newMaxDetections);
 
     // trigger object detection with the updated score threshold and max detections value
@@ -152,51 +154,6 @@ function App() {
       const net = await cocossd.load();
       detectImage(net, imageUrl, scoreThreshold, newMaxDetections);
     }
-  };
-
-  // function to detect objects in an image file
-  const detectImage = async (net, imageFile, scoreThreshold, maxDetections) => {
-    const img = document.createElement("img");
-    img.src = imageFile;
-    img.onload = async () => {
-      const ctx = boundingBoxRef.current.getContext("2d");
-
-      // clear the canvas
-      ctx.clearRect(
-        0,
-        0,
-        boundingBoxRef.current.width,
-        boundingBoxRef.current.height
-      );
-
-      // calculate scaling factors to fit the image within the canvas
-      const scaleFactor = Math.min(
-        boundingBoxRef.current.width / img.width,
-        boundingBoxRef.current.height / img.height
-      );
-
-      // calculate scaled dimensions
-      const scaledWidth = img.width * scaleFactor;
-      const scaledHeight = img.height * scaleFactor;
-
-      // calculate position to center the image
-      const x = (boundingBoxRef.current.width - scaledWidth) / 2;
-      const y = (boundingBoxRef.current.height - scaledHeight) / 2;
-
-      // draw the image on the canvas
-      ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
-
-      // detect objects in the image
-      const obj = await net.detect(boundingBoxRef.current);
-
-      // filter detections based on scoreThreshold and maxDetections
-      const filteredDetections = obj
-        .filter((prediction) => prediction.score >= scoreThreshold)
-        .slice(0, maxDetections);
-
-      // draw rectangles around filtered detections
-      drawRect(filteredDetections, ctx);
-    };
   };
 
   // function to detect objects in the video stream
@@ -244,6 +201,51 @@ function App() {
         isMirrored
       );
     }
+  };
+
+  // function to detect objects in an image file
+  const detectImage = async (net, imageFile, scoreThreshold, maxDetections) => {
+    const img = document.createElement("img");
+    img.src = imageFile;
+    img.onload = async () => {
+      const ctx = boundingBoxRef.current.getContext("2d");
+
+      // clear the canvas
+      ctx.clearRect(
+        0,
+        0,
+        boundingBoxRef.current.width,
+        boundingBoxRef.current.height
+      );
+
+      // calculate scaling factors to fit the image within the canvas
+      const scaleFactor = Math.min(
+        boundingBoxRef.current.width / img.width,
+        boundingBoxRef.current.height / img.height
+      );
+
+      // calculate scaled dimensions
+      const scaledWidth = img.width * scaleFactor;
+      const scaledHeight = img.height * scaleFactor;
+
+      // calculate position to center the image
+      const x = (boundingBoxRef.current.width - scaledWidth) / 2;
+      const y = (boundingBoxRef.current.height - scaledHeight) / 2;
+
+      // draw the image on the canvas
+      ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
+
+      // detect objects in the image
+      const obj = await net.detect(boundingBoxRef.current);
+
+      // filter detections based on scoreThreshold and maxDetections
+      const filteredDetections = obj
+        .filter((prediction) => prediction.score >= scoreThreshold)
+        .slice(0, maxDetections);
+
+      // draw rectangles around filtered detections
+      drawRect(filteredDetections, ctx);
+    };
   };
 
   return (
