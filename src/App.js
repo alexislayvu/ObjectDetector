@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import Webcam from "react-webcam";
+import debounce from "lodash/debounce";
 import * as tf from "@tensorflow/tfjs";
 import * as cocossd from "@tensorflow-models/coco-ssd";
 import { drawRect } from "./utilities";
@@ -133,7 +134,7 @@ function App() {
   const handleThresholdChange = (event) => {
     const newScoreThreshold = parseFloat(event.target.value);
     console.log("New Score Threshold Value:", newScoreThreshold); // debug statement
-    setScoreThreshold(newScoreThreshold);
+    debouncedHandleThresholdChange(parseFloat(event.target.value));
 
     // trigger object detection with the updated score threshold and max detections value
     if (inputSource !== "webcam" && imageUrl) {
@@ -143,11 +144,17 @@ function App() {
     }
   };
 
+  const debouncedHandleThresholdChange = useRef(
+    debounce((value) => {
+      setScoreThreshold(parseFloat(value));
+    }, 100) // adjust debounce delay as needed
+  ).current;
+
   // function to update the maxDetections state and trigger object detection
   const handleMaxDetectionsChange = async (event) => {
     const newMaxDetections = parseInt(event.target.value);
     console.log("New Max Detections Value:", newMaxDetections); // debug statement
-    setMaxDetections(newMaxDetections);
+    debouncedHandleMaxDetectionsChange(parseInt(event.target.value));
 
     // trigger object detection with the updated score threshold and max detections value
     if (inputSource !== "webcam" && imageUrl) {
@@ -155,6 +162,12 @@ function App() {
       detectImage(net, imageUrl, scoreThreshold, newMaxDetections);
     }
   };
+
+  const debouncedHandleMaxDetectionsChange = useRef(
+    debounce((value) => {
+      setMaxDetections(value);
+    }, 100) // adjust debounce delay as needed
+  ).current;
 
   // function to detect objects in the video stream
   const detectWebcam = async (net, scoreThreshold, maxDetections) => {
@@ -275,7 +288,7 @@ function App() {
           id="customRange1"
           min="0"
           max="10"
-          value={maxDetections}
+          defaultValue={1}
           onChange={handleMaxDetectionsChange}
         />
         <p>
@@ -294,7 +307,7 @@ function App() {
           min="0"
           max="1"
           step="0.01"
-          value={scoreThreshold !== -1 ? scoreThreshold : 0.5}
+          defaultValue={0.5}
           onChange={handleThresholdChange}
         />
         <p>
