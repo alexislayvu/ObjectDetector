@@ -1,38 +1,113 @@
-.App {
-  text-align: center;
+.container {
+  grid-template-columns: repeat(auto-fill, minmax(48%, 1fr));
+  grid-gap: 20px;
+  display: grid;
+  color: #ffffff;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+/* styling for dropdown menu positioning */
+.dropdown {
+  grid-column: span 2;
+  margin-top: 5px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+/* styling for dropdown menu label */
+.dropdown-label {
+  margin-bottom: 10px;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+/* styling for sliders */
+.max_detections_slider,
+.score_threshold_slider {
+  grid-column: span 1;
+}
+
+/* styling for webcam positioning */
+.webcam {
+  grid-column: span 2;
+  position: relative;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
 }
 
-.App-link {
-  color: #61dafb;
+/* styling for bounding box positioning */
+.webcam canvas {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
+/* styling for actual webcam feed */
+.webcam .webcam-feed {
+  transform: scaleX(-1);
+  /* width: 100%; */
+}
+
+/* styling for uploaded image */
+.webcam .image-canvas {
+  top: calc(50% + 35vh);
+  transform: translate(-50%, -50%) rotate(360deg);
+}
+
+/* media queries for different screen sizes */
+@media screen and (min-width: 1400px) {
+  .webcam canvas {
+    width: 48%;
   }
-  to {
-    transform: rotate(360deg);
+
+  .webcam .image-canvas {
+    top: calc(50% + 35vh);
+  }
+}
+
+@media screen and (min-width: 1200px) and (max-width: 1399px) {
+  .webcam canvas {
+    width: 58%;
+  }
+
+  .webcam .image-canvas {
+    top: calc(50% + 35vh);
+  }
+}
+
+@media screen and (min-width: 992px) and (max-width: 1199px) {
+  .webcam canvas {
+    width: 68%;
+  }
+
+  .webcam .image-canvas {
+    top: calc(50% + 35vh);
+  }
+}
+
+@media screen and (min-width: 768px) and (max-width: 991px) {
+  .webcam canvas {
+    width: 92%;
+  }
+
+  .webcam .image-canvas {
+    top: calc(50% + 35vh);
+  }
+}
+
+@media screen and (max-width: 767px) {
+  .container {
+    grid-template-columns: repeat(auto-fill, minmax(48%, 1fr));
+  }
+
+  .max_detections_slider,
+  .score_threshold_slider {
+    grid-column: span 2;
+  }
+
+  .webcam .webcam-feed {
+    width: 100%;
+  }
+
+  .webcam .image-canvas {
+    top: calc(50% + 28vh);
   }
 }
