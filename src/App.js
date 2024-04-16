@@ -22,6 +22,9 @@ function App() {
   // state to store the URL of the selected image file
   const [imageUrl, setImageUrl] = useState(null);
 
+  // state to store uploaded images and their URLs
+  const [uploadedImages, setUploadedImages] = useState([]);
+
   // state to track if the component has been initialized
   const [initialized, setInitialized] = useState(false);
 
@@ -71,10 +74,31 @@ function App() {
     const file = event.target.files[0];
     if (file) {
       const imageUrl = URL.createObjectURL(file);
-      setImageUrl(imageUrl); // store the URL of the selected image
-      setSelectedImage(file.name); // update selected image state
-      const net = await cocossd.load();
-      detectImage(net, imageUrl, scoreThreshold, maxDetections);
+      const imageName = file.name;
+
+      // check if the uploaded image already exists in uploadedImages
+      const imageExists = uploadedImages.some(
+        (image) => image.name === imageName
+      );
+
+      if (!imageExists) {
+        const newImage = { name: imageName, url: imageUrl };
+        setUploadedImages([...uploadedImages, newImage]); // add new image to the list
+        setSelectedImage(newImage); // update selected image state
+        const net = await cocossd.load();
+        detectImage(net, imageUrl, scoreThreshold, maxDetections);
+      } else {
+        // update selectedImage state to the uploaded image
+        const selectedImageObj = uploadedImages.find(
+          (image) => image.name === imageName
+        );
+        if (selectedImageObj) {
+          setSelectedImage(selectedImageObj);
+          const net = await cocossd.load();
+          detectImage(net, selectedImageObj.url, scoreThreshold, maxDetections);
+        }
+        console.log(`Image '${imageName}' already exists.`);
+      }
     }
   };
 
@@ -100,43 +124,53 @@ function App() {
       fileInputRef.current.click();
     }
 
-    // if switching back to image file and an image was previously selected, display it
-    if (newInputSource !== "webcam" && imageUrl) {
-      const img = new Image();
-      img.onload = async () => {
-        const ctx = boundingBoxRef.current.getContext("2d");
+    // if switching back to an uploaded image
+    if (newInputSource !== "webcam" && newInputSource !== "file") {
+      // find the selected image object from the uploadedImages array
+      const selectedImageObj = uploadedImages.find(
+        (image) => image.name === newInputSource
+      );
 
-        // clear the canvas
-        ctx.clearRect(
-          0,
-          0,
-          boundingBoxRef.current.width,
-          boundingBoxRef.current.height
-        );
+      if (selectedImageObj) {
+        // update imageUrl state to the selected image URL
+        setImageUrl(selectedImageObj.url);
 
-        // calculate scaling factors to fit the image within the canvas
-        const scaleFactor = Math.min(
-          boundingBoxRef.current.width / img.width,
-          boundingBoxRef.current.height / img.height
-        );
+        const img = new Image();
+        img.onload = async () => {
+          const ctx = boundingBoxRef.current.getContext("2d");
 
-        // calculate scaled dimensions
-        const scaledWidth = img.width * scaleFactor;
-        const scaledHeight = img.height * scaleFactor;
+          // clear the canvas
+          ctx.clearRect(
+            0,
+            0,
+            boundingBoxRef.current.width,
+            boundingBoxRef.current.height
+          );
 
-        // calculate position to center the image
-        const x = (boundingBoxRef.current.width - scaledWidth) / 2;
-        const y = (boundingBoxRef.current.height - scaledHeight) / 2;
+          // calculate scaling factors to fit the image within the canvas
+          const scaleFactor = Math.min(
+            boundingBoxRef.current.width / img.width,
+            boundingBoxRef.current.height / img.height
+          );
 
-        // draw the image on the canvas
-        ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
+          // calculate scaled dimensions
+          const scaledWidth = img.width * scaleFactor;
+          const scaledHeight = img.height * scaleFactor;
 
-        // if switching back to image file, perform detections again
-        const net = await cocossd.load();
-        detectImage(net, imageUrl, scoreThreshold, maxDetections);
-      };
+          // calculate position to center the image
+          const x = (boundingBoxRef.current.width - scaledWidth) / 2;
+          const y = (boundingBoxRef.current.height - scaledHeight) / 2;
 
-      img.src = imageUrl;
+          // draw the image on the canvas
+          ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
+
+          // if switching back to an uploaded image, perform detections again
+          const net = await cocossd.load();
+          detectImage(net, selectedImageObj.url, scoreThreshold, maxDetections);
+        };
+
+        img.src = selectedImageObj.url;
+      }
     }
   };
 
@@ -277,13 +311,19 @@ function App() {
         <label className="dropdown-label">Input</label>
         <select
           className="form-select"
-          value={inputSource === "file" ? selectedImage : inputSource}
+          value={
+            inputSource === "file" && selectedImage
+              ? selectedImage.name
+              : inputSource
+          }
           onChange={handleSourceChange}
         >
           <option value="webcam">Webcam</option>
-          {selectedImage && (
-            <option value={selectedImage}>{selectedImage}</option>
-          )}
+          {uploadedImages.map((image, index) => (
+            <option key={index} value={image.name}>
+              {image.name}
+            </option>
+          ))}
           <option value="file">Choose an image file...</option>
         </select>
       </div>
