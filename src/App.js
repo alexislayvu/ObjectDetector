@@ -132,72 +132,51 @@ function App() {
       );
 
       if (selectedImageObj) {
+        // update selectedImage state to the selected image
+        setSelectedImage(selectedImageObj);
         // update imageUrl state to the selected image URL
         setImageUrl(selectedImageObj.url);
 
-        const img = new Image();
-        img.onload = async () => {
-          const ctx = boundingBoxRef.current.getContext("2d");
-
-          // clear the canvas
-          ctx.clearRect(
-            0,
-            0,
-            boundingBoxRef.current.width,
-            boundingBoxRef.current.height
-          );
-
-          // calculate scaling factors to fit the image within the canvas
-          const scaleFactor = Math.min(
-            boundingBoxRef.current.width / img.width,
-            boundingBoxRef.current.height / img.height
-          );
-
-          // calculate scaled dimensions
-          const scaledWidth = img.width * scaleFactor;
-          const scaledHeight = img.height * scaleFactor;
-
-          // calculate position to center the image
-          const x = (boundingBoxRef.current.width - scaledWidth) / 2;
-          const y = (boundingBoxRef.current.height - scaledHeight) / 2;
-
-          // draw the image on the canvas
-          ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
-
-          // if switching back to an uploaded image, perform detections again
-          const net = await cocossd.load();
-          detectImage(net, selectedImageObj.url, scoreThreshold, maxDetections);
-        };
-
-        img.src = selectedImageObj.url;
+        // perform detections again
+        const net = await cocossd.load();
+        detectImage(net, selectedImageObj.url, scoreThreshold, maxDetections);
       }
     }
   };
 
+  // debounce the handleThresholdChange function
   const debouncedHandleThresholdChange = useRef(
     debounce((value) => {
       setScoreThreshold(parseFloat(value));
-    }, 100) // adjust debounce delay as needed
+      // trigger object detection with the updated score threshold and max detections value
+      if (selectedImage && inputSource !== "webcam") {
+        Promise.resolve().then(async () => {
+          const net = await cocossd.load();
+          detectImage(net, selectedImage.url, parseFloat(value), maxDetections);
+        });
+      }
+    }, 300) // adjust debounce delay as needed
   ).current;
 
-  // function to update the scoreThreshold state and trigger object detection
-  const handleThresholdChange = (event) => {
+  // event handler for changing score threshold
+  const handleThresholdChange = async (event) => {
     const newScoreThreshold = parseFloat(event.target.value);
     console.log("New Score Threshold Value:", newScoreThreshold); // debug statement
-    debouncedHandleThresholdChange(parseFloat(event.target.value));
+    debouncedHandleThresholdChange(newScoreThreshold);
 
     // trigger object detection with the updated score threshold and max detections value
-    if (inputSource !== "webcam" && imageUrl) {
-      cocossd.load().then((net) => {
-        detectImage(net, imageUrl, newScoreThreshold, maxDetections);
+    if (selectedImage && inputSource !== "webcam") {
+      Promise.resolve().then(async () => {
+        const net = await cocossd.load();
+        detectImage(net, selectedImage.url, newScoreThreshold, maxDetections);
       });
     }
   };
 
   const debouncedHandleMaxDetectionsChange = useRef(
     debounce((value) => {
-      setMaxDetections(value);
-    }, 100) // adjust debounce delay as needed
+      setMaxDetections(parseInt(value));
+    }, 300) // adjust debounce delay as needed
   ).current;
 
   // function to update the maxDetections state and trigger object detection
@@ -207,9 +186,11 @@ function App() {
     debouncedHandleMaxDetectionsChange(parseInt(event.target.value));
 
     // trigger object detection with the updated score threshold and max detections value
-    if (inputSource !== "webcam" && imageUrl) {
-      const net = await cocossd.load();
-      detectImage(net, imageUrl, scoreThreshold, newMaxDetections);
+    if (selectedImage && inputSource !== "webcam") {
+      Promise.resolve().then(async () => {
+        const net = await cocossd.load();
+        detectImage(net, selectedImage.url, scoreThreshold, newMaxDetections);
+      });
     }
   };
 
@@ -246,7 +227,8 @@ function App() {
 
       // filter detections based on scoreThreshold
       const filteredDetections = obj.filter(
-        (prediction) => prediction.score >= scoreThreshold
+        (prediction) =>
+          Math.round(prediction.score * 100) >= Math.round(scoreThreshold * 100)
       );
 
       // draw rectangles around filtered detections
@@ -297,7 +279,11 @@ function App() {
 
       // filter detections based on scoreThreshold and maxDetections
       const filteredDetections = obj
-        .filter((prediction) => prediction.score >= scoreThreshold - 0.01)
+        .filter(
+          (prediction) =>
+            Math.round(prediction.score * 100) >=
+            Math.round(scoreThreshold * 100)
+        )
         .slice(0, maxDetections);
 
       // draw rectangles around filtered detections
