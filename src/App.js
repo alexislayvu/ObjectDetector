@@ -22,25 +22,17 @@ function App() {
   // state to store the URL of the selected image file
   const [imageUrl, setImageUrl] = useState(null);
 
+  // state to track if the component has been initialized
+  const [initialized, setInitialized] = useState(false);
+
   // state to store the score threshold
-  const [scoreThreshold, setScoreThreshold] = useState(-1);
+  const [scoreThreshold, setScoreThreshold] = useState(0.5);
+
+  // state to track if scoreThreshold has changed from its initial value
+  const [thresholdChanged, setThresholdChanged] = useState(false);
 
   // state to store the maximum number of detections
   const [maxDetections, setMaxDetections] = useState(1);
-
-  useEffect(() => {
-    if (scoreThreshold !== -1) {
-      let cleanupFunction;
-      runCoco().then((cleanup) => {
-        cleanupFunction = cleanup;
-      });
-
-      // cleanup function to clear the interval when component unmounts or when scoreThreshold or maxDetections changes
-      return () => {
-        if (cleanupFunction) cleanupFunction();
-      };
-    }
-  }, [scoreThreshold, maxDetections]);
 
   // function to load the COCO-SSD model and start object detection on the webcam feed
   const runCoco = async () => {
@@ -55,6 +47,24 @@ function App() {
     // return a cleanup function to clear the interval
     return () => clearInterval(intervalId);
   };
+
+  useEffect(() => {
+    // check if initialized and scoreThreshold is not 0.5 or if threshold has changed
+    if ((initialized && scoreThreshold !== 0.5) || thresholdChanged) {
+      let cleanupFunction;
+      runCoco().then((cleanup) => {
+        cleanupFunction = cleanup;
+      });
+
+      // cleanup function to clear the interval when component unmounts or when scoreThreshold or maxDetections changes
+      return () => {
+        if (cleanupFunction) cleanupFunction();
+      };
+    } else {
+      setInitialized(true); // set initialized to true after the first render
+      setThresholdChanged(true); // set thresholdChanged to true after the initial render
+    }
+  }, [initialized, scoreThreshold, maxDetections, thresholdChanged]);
 
   // event handler for selecting a file
   const handleFileChange = async (event) => {
@@ -130,6 +140,12 @@ function App() {
     }
   };
 
+  const debouncedHandleThresholdChange = useRef(
+    debounce((value) => {
+      setScoreThreshold(parseFloat(value));
+    }, 100) // adjust debounce delay as needed
+  ).current;
+
   // function to update the scoreThreshold state and trigger object detection
   const handleThresholdChange = (event) => {
     const newScoreThreshold = parseFloat(event.target.value);
@@ -144,9 +160,9 @@ function App() {
     }
   };
 
-  const debouncedHandleThresholdChange = useRef(
+  const debouncedHandleMaxDetectionsChange = useRef(
     debounce((value) => {
-      setScoreThreshold(parseFloat(value));
+      setMaxDetections(value);
     }, 100) // adjust debounce delay as needed
   ).current;
 
@@ -162,12 +178,6 @@ function App() {
       detectImage(net, imageUrl, scoreThreshold, newMaxDetections);
     }
   };
-
-  const debouncedHandleMaxDetectionsChange = useRef(
-    debounce((value) => {
-      setMaxDetections(value);
-    }, 100) // adjust debounce delay as needed
-  ).current;
 
   // function to detect objects in the video stream
   const detectWebcam = async (net, scoreThreshold, maxDetections) => {
@@ -253,7 +263,7 @@ function App() {
 
       // filter detections based on scoreThreshold and maxDetections
       const filteredDetections = obj
-        .filter((prediction) => prediction.score >= scoreThreshold)
+        .filter((prediction) => prediction.score >= scoreThreshold - 0.01)
         .slice(0, maxDetections);
 
       // draw rectangles around filtered detections
