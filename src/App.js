@@ -22,6 +22,9 @@ function App() {
   // state to store the URL of the selected image file
   const [imageUrl, setImageUrl] = useState(null);
 
+  // state to store uploaded images and their URLs
+  const [uploadedImages, setUploadedImages] = useState([]);
+
   // state to track if the component has been initialized
   const [initialized, setInitialized] = useState(false);
 
@@ -71,10 +74,31 @@ function App() {
     const file = event.target.files[0];
     if (file) {
       const imageUrl = URL.createObjectURL(file);
-      setImageUrl(imageUrl); // store the URL of the selected image
-      setSelectedImage(file.name); // update selected image state
-      const net = await cocossd.load();
-      detectImage(net, imageUrl, scoreThreshold, maxDetections);
+      const imageName = file.name;
+
+      // check if the uploaded image already exists in uploadedImages
+      const imageExists = uploadedImages.some(
+        (image) => image.name === imageName
+      );
+
+      if (!imageExists) {
+        const newImage = { name: imageName, url: imageUrl };
+        setUploadedImages([...uploadedImages, newImage]); // add new image to the list
+        setSelectedImage(newImage); // update selected image state
+        const net = await cocossd.load();
+        detectImage(net, imageUrl, scoreThreshold, maxDetections);
+      } else {
+        // update selectedImage state to the uploaded image
+        const selectedImageObj = uploadedImages.find(
+          (image) => image.name === imageName
+        );
+        if (selectedImageObj) {
+          setSelectedImage(selectedImageObj);
+          const net = await cocossd.load();
+          detectImage(net, selectedImageObj.url, scoreThreshold, maxDetections);
+        }
+        console.log(`Image '${imageName}' already exists.`);
+      }
     }
   };
 
@@ -100,70 +124,59 @@ function App() {
       fileInputRef.current.click();
     }
 
-    // if switching back to image file and an image was previously selected, display it
-    if (newInputSource !== "webcam" && imageUrl) {
-      const img = new Image();
-      img.onload = async () => {
-        const ctx = boundingBoxRef.current.getContext("2d");
+    // if switching back to an uploaded image
+    if (newInputSource !== "webcam" && newInputSource !== "file") {
+      // find the selected image object from the uploadedImages array
+      const selectedImageObj = uploadedImages.find(
+        (image) => image.name === newInputSource
+      );
 
-        // clear the canvas
-        ctx.clearRect(
-          0,
-          0,
-          boundingBoxRef.current.width,
-          boundingBoxRef.current.height
-        );
+      if (selectedImageObj) {
+        // update selectedImage state to the selected image
+        setSelectedImage(selectedImageObj);
+        // update imageUrl state to the selected image URL
+        setImageUrl(selectedImageObj.url);
 
-        // calculate scaling factors to fit the image within the canvas
-        const scaleFactor = Math.min(
-          boundingBoxRef.current.width / img.width,
-          boundingBoxRef.current.height / img.height
-        );
-
-        // calculate scaled dimensions
-        const scaledWidth = img.width * scaleFactor;
-        const scaledHeight = img.height * scaleFactor;
-
-        // calculate position to center the image
-        const x = (boundingBoxRef.current.width - scaledWidth) / 2;
-        const y = (boundingBoxRef.current.height - scaledHeight) / 2;
-
-        // draw the image on the canvas
-        ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
-
-        // if switching back to image file, perform detections again
+        // perform detections again
         const net = await cocossd.load();
-        detectImage(net, imageUrl, scoreThreshold, maxDetections);
-      };
-
-      img.src = imageUrl;
+        detectImage(net, selectedImageObj.url, scoreThreshold, maxDetections);
+      }
     }
   };
 
+  // debounce the handleThresholdChange function
   const debouncedHandleThresholdChange = useRef(
     debounce((value) => {
       setScoreThreshold(parseFloat(value));
-    }, 100) // adjust debounce delay as needed
+      // trigger object detection with the updated score threshold and max detections value
+      if (selectedImage && inputSource !== "webcam") {
+        Promise.resolve().then(async () => {
+          const net = await cocossd.load();
+          detectImage(net, selectedImage.url, parseFloat(value), maxDetections);
+        });
+      }
+    }, 300) // adjust debounce delay as needed
   ).current;
 
-  // function to update the scoreThreshold state and trigger object detection
-  const handleThresholdChange = (event) => {
+  // event handler for changing score threshold
+  const handleThresholdChange = async (event) => {
     const newScoreThreshold = parseFloat(event.target.value);
     console.log("New Score Threshold Value:", newScoreThreshold); // debug statement
-    debouncedHandleThresholdChange(parseFloat(event.target.value));
+    debouncedHandleThresholdChange(newScoreThreshold);
 
     // trigger object detection with the updated score threshold and max detections value
-    if (inputSource !== "webcam" && imageUrl) {
-      cocossd.load().then((net) => {
-        detectImage(net, imageUrl, newScoreThreshold, maxDetections);
+    if (selectedImage && inputSource !== "webcam") {
+      Promise.resolve().then(async () => {
+        const net = await cocossd.load();
+        detectImage(net, selectedImage.url, newScoreThreshold, maxDetections);
       });
     }
   };
 
   const debouncedHandleMaxDetectionsChange = useRef(
     debounce((value) => {
-      setMaxDetections(value);
-    }, 100) // adjust debounce delay as needed
+      setMaxDetections(parseInt(value));
+    }, 300) // adjust debounce delay as needed
   ).current;
 
   // function to update the maxDetections state and trigger object detection
@@ -173,9 +186,11 @@ function App() {
     debouncedHandleMaxDetectionsChange(parseInt(event.target.value));
 
     // trigger object detection with the updated score threshold and max detections value
-    if (inputSource !== "webcam" && imageUrl) {
-      const net = await cocossd.load();
-      detectImage(net, imageUrl, scoreThreshold, newMaxDetections);
+    if (selectedImage && inputSource !== "webcam") {
+      Promise.resolve().then(async () => {
+        const net = await cocossd.load();
+        detectImage(net, selectedImage.url, scoreThreshold, newMaxDetections);
+      });
     }
   };
 
@@ -212,7 +227,8 @@ function App() {
 
       // filter detections based on scoreThreshold
       const filteredDetections = obj.filter(
-        (prediction) => prediction.score >= scoreThreshold
+        (prediction) =>
+          Math.round(prediction.score * 100) >= Math.round(scoreThreshold * 100)
       );
 
       // draw rectangles around filtered detections
@@ -263,7 +279,11 @@ function App() {
 
       // filter detections based on scoreThreshold and maxDetections
       const filteredDetections = obj
-        .filter((prediction) => prediction.score >= scoreThreshold - 0.01)
+        .filter(
+          (prediction) =>
+            Math.round(prediction.score * 100) >=
+            Math.round(scoreThreshold * 100)
+        )
         .slice(0, maxDetections);
 
       // draw rectangles around filtered detections
@@ -277,13 +297,19 @@ function App() {
         <label className="dropdown-label">Input</label>
         <select
           className="form-select"
-          value={inputSource === "file" ? selectedImage : inputSource}
+          value={
+            inputSource === "file" && selectedImage
+              ? selectedImage.name
+              : inputSource
+          }
           onChange={handleSourceChange}
         >
           <option value="webcam">Webcam</option>
-          {selectedImage && (
-            <option value={selectedImage}>{selectedImage}</option>
-          )}
+          {uploadedImages.map((image, index) => (
+            <option key={index} value={image.name}>
+              {image.name}
+            </option>
+          ))}
           <option value="file">Choose an image file...</option>
         </select>
       </div>
