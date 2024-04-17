@@ -1,8 +1,9 @@
 // object to store assigned colors for different classes
 const colorMap = {};
 
-// Utility function to draw rectangles
-export function drawRect(detections, ctx, videoWidth, videoHeight, isMirrored, accuracyThreshold) {
+// function to draw bounding boxes and labels for detected objects
+export const drawRect = (detections, ctx, videoWidth, isMirrored) => {
+  // loop through each detected object
   detections.forEach((prediction) => {
     const [x, y, width, height] = prediction.bbox;
 

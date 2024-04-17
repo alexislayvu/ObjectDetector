@@ -1,11 +1,10 @@
 import React, { useRef, useState, useEffect } from "react";
+import Webcam from "react-webcam";
+import debounce from "lodash/debounce";
 import * as tf from "@tensorflow/tfjs";
 import * as cocossd from "@tensorflow-models/coco-ssd";
-import Webcam from "react-webcam";
-import "./App.css";
 import { drawRect } from "./utilities";
-import debounce from "lodash/debounce"; // Import debounce function from lodash library
-
+import "./App.css";
 
 // initialize TensorFlow.js backend
 await tf.ready();
@@ -47,81 +46,80 @@ function App() {
     </div>
   );
 
- // function to load COCO-SSD model and start object detection
+  // state to store the URL of the selected image file
+  const [imageUrl, setImageUrl] = useState(null);
+
+  // state to track if the component has been initialized
+  const [initialized, setInitialized] = useState(false);
+
+  // state to store the score threshold
+  const [scoreThreshold, setScoreThreshold] = useState(0.5);
+
+  // state to track if scoreThreshold has changed from its initial value
+  const [thresholdChanged, setThresholdChanged] = useState(false);
+
+  // state to store the maximum number of detections
+  const [maxDetections, setMaxDetections] = useState(1);
+
+  // function to load the COCO-SSD model and start object detection on the webcam feed
   const runCoco = async () => {
   const net = await cocossd.load(); // load the COCO-SSD model
   console.log("COCO-SSD model loaded.");
 
-  // continuously detect objects in the video stream
-  const intervalId = setInterval(() => {
-    detectWebcam(net, accuracyThreshold); // call the detect function repeatedly
-  }, 10);
+    // continuously detect objects in the video stream
+    const intervalId = setInterval(() => {
+      detectWebcam(net, scoreThreshold, maxDetections); // call the detect function repeatedly
+    }, 10);
 
-  // Return a cleanup function to clear the interval
-  return () => clearInterval(intervalId);
+    // return a cleanup function to clear the interval
+    return () => clearInterval(intervalId);
   };
 
-  // load COCO-SSD model when component mounts
   useEffect(() => {
-    // Check if accuracyThreshold is not -1
-    if (accuracyThreshold !== -1) {
+    // check if initialized and scoreThreshold is not 0.5 or if threshold has changed
+    if ((initialized && scoreThreshold !== 0.5) || thresholdChanged) {
       let cleanupFunction;
-      runCoco().then(cleanup => {
+      runCoco().then((cleanup) => {
         cleanupFunction = cleanup;
       });
 
-      // Cleanup function to clear the interval when component unmounts or when accuracyThreshold changes
+      // cleanup function to clear the interval when component unmounts or when scoreThreshold or maxDetections changes
       return () => {
         if (cleanupFunction) cleanupFunction();
       };
+    } else {
+      setInitialized(true); // set initialized to true after the first render
+      setThresholdChanged(true); // set thresholdChanged to true after the initial render
     }
-  }, [accuracyThreshold]);
+  }, [initialized, scoreThreshold, maxDetections, thresholdChanged]);
 
-  // function to detect objects in the video stream
-  const detectWebcam = async (net, accuracyThreshold) => {
-    // check if webcam video data is available
-    if (
-      webcamRef.current &&
-      typeof webcamRef.current !== "undefined" &&
-      webcamRef.current !== null &&
-      webcamRef.current.video.readyState === 4
-    ) {
-      // get video properties
-      const video = webcamRef.current.video;
-      const videoWidth = video.videoWidth;
-      const videoHeight = video.videoHeight;
-
-      // set canvas dimensions to match video dimensions
-      video.width = videoWidth;
-      video.height = videoHeight;
-      boundingBoxRef.current.width = videoWidth;
-      boundingBoxRef.current.height = videoHeight;
-
-      // make object detections
-      const obj = await net.detect(video);
-
-      // draw bounding boxes around detected objects
-      const ctx = boundingBoxRef.current.getContext("2d");
-      ctx.clearRect(0, 0, videoWidth, videoHeight); // clear the canvas
-
-      // check if webcam feed is mirrored
-      const isMirrored = webcamRef.current.video.style.transform === "scaleX(-1)";
-
-      // Filter detections based on accuracy threshold
-      const filteredDetections = obj.filter(prediction => prediction.score >= accuracyThreshold);
-
-      // adjust bounding box coordinates if mirrored
-      drawRect(filteredDetections, ctx, videoWidth, videoHeight, isMirrored, accuracyThreshold);
+  // event handler for selecting a file
+  const handleFileChange = async (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const imageUrl = URL.createObjectURL(file);
+      setImageUrl(imageUrl); // store the URL of the selected image
+      setSelectedImage(file.name); // update selected image state
+      const net = await cocossd.load();
+      detectImage(net, imageUrl, scoreThreshold, maxDetections);
     }
   };
-
-  // state to store the URL of the selected image file
-  const [imageUrl, setImageUrl] = useState(null);
 
   // event handler for changing input source (webcam or file)
   const handleSourceChange = async (event) => {
     const newInputSource = event.target.value;
     setInputSource(newInputSource);
+
+    // clear canvas when switching to webcam input
+    if (newInputSource === "webcam") {
+      const ctx = boundingBoxRef.current.getContext("2d");
+      ctx.clearRect(
+        0,
+        0,
+        boundingBoxRef.current.width,
+        boundingBoxRef.current.height
+      );
+    }
 
     // reset file input value when switching to image input source
     if (newInputSource === "file") {
@@ -162,28 +160,101 @@ function App() {
 
         // if switching back to image file, perform detections again
         const net = await cocossd.load();
-        const obj = await net.detect(boundingBoxRef.current);
-        drawRect(obj, ctx); // draw detections on the canvas
+        detectImage(net, imageUrl, scoreThreshold, maxDetections);
       };
 
       img.src = imageUrl;
     }
   };
 
-  // event handler for selecting a file
-  const handleFileChange = async (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setImageUrl(imageUrl); // store the URL of the selected image
-      setSelectedImage(file.name); // update selected image state
+  const debouncedHandleThresholdChange = useRef(
+    debounce((value) => {
+      setScoreThreshold(parseFloat(value));
+    }, 100) // adjust debounce delay as needed
+  ).current;
+
+  // function to update the scoreThreshold state and trigger object detection
+  const handleThresholdChange = (event) => {
+    const newScoreThreshold = parseFloat(event.target.value);
+    console.log("New Score Threshold Value:", newScoreThreshold); // debug statement
+    debouncedHandleThresholdChange(parseFloat(event.target.value));
+
+    // trigger object detection with the updated score threshold and max detections value
+    if (inputSource !== "webcam" && imageUrl) {
+      cocossd.load().then((net) => {
+        detectImage(net, imageUrl, newScoreThreshold, maxDetections);
+      });
+    }
+  };
+
+  const debouncedHandleMaxDetectionsChange = useRef(
+    debounce((value) => {
+      setMaxDetections(value);
+    }, 100) // adjust debounce delay as needed
+  ).current;
+
+  // function to update the maxDetections state and trigger object detection
+  const handleMaxDetectionsChange = async (event) => {
+    const newMaxDetections = parseInt(event.target.value);
+    console.log("New Max Detections Value:", newMaxDetections); // debug statement
+    debouncedHandleMaxDetectionsChange(parseInt(event.target.value));
+
+    // trigger object detection with the updated score threshold and max detections value
+    if (inputSource !== "webcam" && imageUrl) {
       const net = await cocossd.load();
-      detectImage(net, imageUrl);
+      detectImage(net, imageUrl, scoreThreshold, newMaxDetections);
+    }
+  };
+
+  // function to detect objects in the video stream
+  const detectWebcam = async (net, scoreThreshold, maxDetections) => {
+    // check if webcam video data is available
+    if (
+      webcamRef.current &&
+      typeof webcamRef.current !== "undefined" &&
+      webcamRef.current !== null &&
+      webcamRef.current.video.readyState === 4
+    ) {
+      // get video properties
+      const video = webcamRef.current.video;
+      const videoWidth = video.videoWidth;
+      const videoHeight = video.videoHeight;
+
+      // set canvas dimensions to match video dimensions
+      video.width = videoWidth;
+      video.height = videoHeight;
+      boundingBoxRef.current.width = videoWidth;
+      boundingBoxRef.current.height = videoHeight;
+
+      // make object detections
+      const obj = await net.detect(video);
+
+      // draw bounding boxes around detected objects
+      const ctx = boundingBoxRef.current.getContext("2d");
+      ctx.clearRect(0, 0, videoWidth, videoHeight); // clear the canvas
+
+      // check if webcam feed is mirrored
+      const isMirrored =
+        webcamRef.current.video.style.transform === "scaleX(-1)";
+
+      // filter detections based on scoreThreshold
+      const filteredDetections = obj.filter(
+        (prediction) => prediction.score >= scoreThreshold
+      );
+
+      // draw rectangles around filtered detections
+      drawRect(
+        filteredDetections.slice(0, maxDetections),
+        ctx,
+        videoWidth,
+        videoHeight,
+        isMirrored
+      );
     }
   };
 
   // function to detect objects in an image file
-  const detectImage = async (net, imageFile) => {
+  const detectImage = async (net, imageFile, scoreThreshold, maxDetections) => {
     const img = document.createElement("img");
     img.src = imageFile;
     img.onload = async () => {
@@ -216,53 +287,26 @@ function App() {
 
       // detect objects in the image
       const obj = await net.detect(boundingBoxRef.current);
-      drawRect(obj, ctx); // draw detections on the canvas
+
+      // filter detections based on scoreThreshold and maxDetections
+      const filteredDetections = obj
+        .filter((prediction) => prediction.score >= scoreThreshold - 0.01)
+        .slice(0, maxDetections);
+
+      // draw rectangles around filtered detections
+      drawRect(filteredDetections, ctx);
     };
-  };
-
-  // styles
-  const webcamStyle = {
-    display: inputSource === "webcam" ? "block" : "none",
-    position: "absolute",
-    marginLeft: "auto",
-    marginRight: "auto",
-    left: 0,
-    right: 0,
-    textAlign: "center",
-    zIndex: 1,
-    width: 640,
-    height: 480,
-    transform: inputSource === "webcam" ? "scaleX(-1)" : "none", // mirror webcam feed horizontally
-  };
-
-  const boundingBoxStyle = {
-    position: "absolute",
-    marginLeft: "auto",
-    marginRight: "auto",
-    left: 0,
-    right: 0,
-    textAlign: "center",
-    zIndex: 2,
-    width: 640,
-    height: 480,
-  };
-
-  const dropdownStyle = {
-    position: "absolute",
-    top: 10,
-    left: 10,
-    zIndex: 10,
   };
 
   
   return (
-    <div className="App">
-      <header className="App-header">
-        {/* dropdown menu for selecting input source */}
+    <div className="container">
+      <div className="dropdown">
+        <label className="dropdown-label">Input</label>
         <select
+          className="form-select"
           value={inputSource === "file" ? selectedImage : inputSource}
           onChange={handleSourceChange}
-          style={dropdownStyle}
         >
           <option value="webcam">Webcam</option>
           {selectedImage && (
@@ -270,26 +314,66 @@ function App() {
           )}
           <option value="file">Choose an image file...</option>
         </select>
+      </div>
 
-        {/* hidden input field for selecting a file from the system */}
+      <div className="max_detections_slider">
+        <label htmlFor="customRange1" className="form-label">
+          Max Detections
+        </label>
         <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          style={{ display: "none" }}
+          type="range"
+          className="form-range"
+          id="customRange1"
+          min="0"
+          max="10"
+          defaultValue={1}
+          onChange={handleMaxDetectionsChange}
         />
+        <p>
+          Value: <span id="max_detections_value">{maxDetections}</span>
+        </p>
+      </div>
 
-        {/* render webcam component if input source is webcam */}
+      <div className="score_threshold_slider">
+        <label htmlFor="customRange2" className="form-label">
+          Score Threshold
+        </label>
+        <input
+          type="range"
+          className="form-range"
+          id="customRange2"
+          min="0"
+          max="1"
+          step="0.01"
+          defaultValue={0.5}
+          onChange={handleThresholdChange}
+        />
+        <p>
+          Value:{" "}
+          <span id="score_threshold_value">
+            {(scoreThreshold * 100).toFixed(0)}%
+          </span>
+        </p>
+      </div>
+
+      <div className="webcam">
         {inputSource === "webcam" && (
-          <Webcam ref={webcamRef} muted={true} style={webcamStyle} />
+          <Webcam ref={webcamRef} muted={true} className="webcam-feed" />
         )}
+        <canvas
+          ref={boundingBoxRef}
+          className={
+            inputSource === "webcam" ? "webcam-canvas" : "image-canvas"
+          }
+        />
+      </div>
 
-        {/* Render the slider */}
-        {slider}
-
-        {/* canvas for displaying bounding boxes */}
-        <canvas ref={boundingBoxRef} style={boundingBoxStyle} />
-      </header>
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        style={{ display: "none" }}
+      />
     </div>
   );
 }
